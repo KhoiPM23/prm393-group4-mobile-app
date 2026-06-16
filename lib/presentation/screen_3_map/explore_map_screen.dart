@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
+import '../../core/constants/app_text_styles.dart';
 import '../widgets/vibe_bottom_nav_bar.dart';
 
 /// Màn hình Bản đồ Khám phá VibeLocals
@@ -45,8 +46,7 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
       begin: const Offset(0, 1),
       end: Offset.zero,
     ).animate(
-      CurvedAnimation(
-          parent: _cardSlideController, curve: Curves.easeOutCubic),
+      CurvedAnimation(parent: _cardSlideController, curve: Curves.easeOutCubic),
     );
   }
 
@@ -85,7 +85,6 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
               ),
               child: Stack(
                 children: [
-                  // Map image
                   Positioned.fill(
                     child: Image.network(
                       'https://lh3.googleusercontent.com/aida-public/AB6AXuC8AngP5xRzXNExEtaqKr9q-V22itFxEU1uaIbhIN8ZuQsMQUQ8dVzyVjSU5DkXzt31ZvcqugLMIfVOVMGqAsjOFUowXNf3x8hOfLDAjigcmEsnonZGpAYMTrGRKc-R-TYiGUfG_If4lqYbIcOs08A3RZ5C6xadz5Pnx0d3SsjiCGnl6ZgDel-Pging1FjxLsq2i_sKLqQYTfjA-BTmqQtsWElC4-SKf3U_lRUZDfaLg5el7O_x8TdDOk14XPoOKrMM6EXubD74_tM',
@@ -103,7 +102,6 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                       ),
                     ),
                   ),
-                  // Bottom gradient fade
                   Positioned(
                     bottom: 0,
                     left: 0,
@@ -122,7 +120,6 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                       ),
                     ),
                   ),
-                  // ===== MAP MARKERS =====
                   ..._markers.asMap().entries.map((entry) {
                     final i = entry.key;
                     final m = entry.value;
@@ -144,13 +141,18 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
             ),
           ),
 
-          // ===== TOP SEARCH BAR =====
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: _FloatingSearchBar(
-                onBackTap: () => Navigator.of(context).pop(),
+          // ===== FIX: BỌC POSITIONED CHO TOP SEARCH BAR =====
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: _FloatingSearchBar(
+                  onBackTap: () => Navigator.of(context).pop(),
+                ),
               ),
             ),
           ),
@@ -253,8 +255,8 @@ class _FloatingSearchBar extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onBackTap,
-            icon: const Icon(Icons.arrow_back,
-                color: AppColors.onSurfaceVariant),
+            icon:
+                const Icon(Icons.arrow_back, color: AppColors.onSurfaceVariant),
             iconSize: 22,
             style: IconButton.styleFrom(
               minimumSize:
@@ -312,8 +314,8 @@ class _PropertyPreviewCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(
-            color: AppColors.outlineVariant.withValues(alpha: 0.2)),
+        border:
+            Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -370,8 +372,7 @@ class _PropertyPreviewCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.star,
-                              size: 12,
-                              color: AppColors.onSecondaryContainer),
+                              size: 12, color: AppColors.onSecondaryContainer),
                           const SizedBox(width: 2),
                           Text(
                             rating.toString(),

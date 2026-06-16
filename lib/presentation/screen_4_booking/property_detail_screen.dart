@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
+import '../../core/constants/app_text_styles.dart';
 import '../widgets/vibe_cards.dart';
 import '../widgets/vibe_ui_components.dart';
 
@@ -57,32 +58,39 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // Hero Image
+              // ===== FIX: GỘP HERO VÀ CARD VÀO MỘT SLIVER DUY NHẤT =====
               SliverToBoxAdapter(
-                child: _HeroSection(
-                  imageUrl:
-                      'https://lh3.googleusercontent.com/aida-public/AB6AXuCBkRgELSDZK6S_BspKR_p3xyP69vhJoH2QFvGIMDLE26xbdiQZ_GBbm5dhYSHaUpbKYxo6VZgexri3WnP4crxXBe92ZUYCH8Hkj2vlUlJKkFVgB2zG6VugzynNJpT_4Aq5kU_bKskMLUYLLQCwNAQK1JOBhq2urIdCzeMWgbMcMR23maG4ETUtyygscSyvl-gjigOJ0pUS1_3VVw_Rgmunpo4JSUUDGpsIQRVGl23A9ucg_8hfsL9w7Lt22VesZzareiDvqROQ41s',
-                ),
-              ),
-              // Property Info Card (overlaps hero)
-              SliverToBoxAdapter(
-                child: Transform.translate(
-                  offset: const Offset(0, -40),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md),
-                    child: _PropertyInfoCard(
-                      onChatTap: () =>
-                          Navigator.of(context).pushNamed('/chat'),
+                child: Stack(
+                  clipBehavior: Clip
+                      .none, // Cho phép các phần tử con trồi ra ngoài thoải mái
+                  children: [
+                    // Phần hình nền có khoảng đệm phía dưới để đẩy layout
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 40.0),
+                      child: _HeroSection(
+                        imageUrl:
+                            'https://lh3.googleusercontent.com/aida-public/AB6AXuCBkRgELSDZK6S_BspKR_p3xyP69vhJoH2QFvGIMDLE26xbdiQZ_GBbm5dhYSHaUpbKYxo6VZgexri3WnP4crxXBe92ZUYCH8Hkj2vlUlJKkFVgB2zG6VugzynNJpT_4Aq5kU_bKskMLUYLLQCwNAQK1JOBhq2urIdCzeMWgbMcMR23maG4ETUtyygscSyvl-gjigOJ0pUS1_3VVw_Rgmunpo4JSUUDGpsIQRVGl23A9ucg_8hfsL9w7Lt22VesZzareiDvqROQ41s',
+                      ),
                     ),
-                  ),
+                    // Thẻ thông tin được neo chặt ở đáy Stack, đè lên ảnh chuẩn 100%
+                    Positioned(
+                      bottom: 0,
+                      left: AppSpacing.md,
+                      right: AppSpacing.md,
+                      child: _PropertyInfoCard(
+                        onChatTap: () =>
+                            Navigator.of(context).pushNamed('/chat'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              // Room List Section
+
+              // Room List Section (Giữ nguyên phần phía dưới)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md, 0, AppSpacing.md, 0),
+                      AppSpacing.md, AppSpacing.lg, AppSpacing.md, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -130,8 +138,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                               label: 'Nhà hàng Á - Âu',
                               icon: Icons.restaurant_outlined),
                           VibeChip(
-                              label: 'Spa & Massage',
-                              icon: Icons.spa_outlined),
+                              label: 'Spa & Massage', icon: Icons.spa_outlined),
                           VibeChip(
                               label: 'Cho thuê xe đạp',
                               icon: Icons.directions_bike_outlined),
@@ -177,11 +184,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                         icon: _isFavorite
                             ? Icons.favorite
                             : Icons.favorite_border,
-                        iconColor: _isFavorite
-                            ? AppColors.error
-                            : AppColors.onSurface,
-                        onTap: () =>
-                            setState(() => _isFavorite = !_isFavorite),
+                        iconColor:
+                            _isFavorite ? AppColors.error : AppColors.onSurface,
+                        onTap: () => setState(() => _isFavorite = !_isFavorite),
                       ),
                     ],
                   ),
@@ -196,8 +201,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             left: 0,
             right: 0,
             child: _BookingFooter(
-              onBookTap: () =>
-                  Navigator.of(context).pushNamed('/booking'),
+              onBookTap: () => Navigator.of(context).pushNamed('/booking'),
             ),
           ),
         ],
@@ -295,8 +299,8 @@ class _PropertyInfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-            color: AppColors.outlineVariant.withValues(alpha: 0.3)),
+        border:
+            Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -326,8 +330,7 @@ class _PropertyInfoCard extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(Icons.location_on_outlined,
-                            size: 16,
-                            color: AppColors.onSurfaceVariant),
+                            size: 16, color: AppColors.onSurfaceVariant),
                         const SizedBox(width: 4),
                         Text(
                           'Hội An, Quảng Nam',
@@ -342,12 +345,11 @@ class _PropertyInfoCard extends StatelessWidget {
               ),
               // Star rating
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.secondaryFixed,
-                  borderRadius:
-                      BorderRadius.circular(AppRadius.full),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.secondary.withValues(alpha: 0.2),
@@ -359,8 +361,7 @@ class _PropertyInfoCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.star,
-                        size: 16,
-                        color: AppColors.onSecondaryFixed),
+                        size: 16, color: AppColors.onSecondaryFixed),
                     const SizedBox(width: 4),
                     Text(
                       '4.9',
@@ -387,8 +388,7 @@ class _PropertyInfoCard extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => const CircleAvatar(
                       backgroundColor: AppColors.surfaceContainerHigh,
-                      child: Icon(Icons.person,
-                          color: AppColors.outline),
+                      child: Icon(Icons.person, color: AppColors.outline),
                     ),
                   ),
                 ),
@@ -421,13 +421,11 @@ class _PropertyInfoCard extends StatelessWidget {
                   foregroundColor: AppColors.primary,
                   side: const BorderSide(color: AppColors.outlineVariant),
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppRadius.full),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
-                  minimumSize:
-                      const Size(96, AppTouchTarget.minSize),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  minimumSize: const Size(96, AppTouchTarget.minSize),
                   textStyle: AppTextStyles.labelLg,
                 ),
               ),
@@ -523,8 +521,8 @@ class _BookingFooter extends StatelessWidget {
                 children: [
                   Text(
                     'Giá phòng từ',
-                    style: AppTextStyles.labelMd.copyWith(
-                        color: AppColors.outline),
+                    style: AppTextStyles.labelMd
+                        .copyWith(color: AppColors.outline),
                   ),
                   RichText(
                     text: TextSpan(
@@ -554,8 +552,7 @@ class _BookingFooter extends StatelessWidget {
                     foregroundColor: AppColors.onPrimary,
                     minimumSize: const Size(double.infinity, 52),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppRadius.xl),
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
                     ),
                     elevation: 4,
                   ),
