@@ -140,9 +140,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               currentIndex: _currentNavIndex,
               onTap: (i) {
                 setState(() => _currentNavIndex = i);
-                if (i == 0)
+                if (i == 0) {
                   Navigator.of(context)
                       .pushReplacementNamed('/home');
+                }
               },
             ),
           ),

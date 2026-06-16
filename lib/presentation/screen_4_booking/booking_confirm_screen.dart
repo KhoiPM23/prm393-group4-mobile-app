@@ -87,7 +87,7 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (m) => '${m[1]}.',
         );
-    return '${formatted}đ';
+    return '$formattedđ';
   }
 
   Future<void> _handleConfirm() async {
@@ -747,63 +747,70 @@ class _PaymentMethodSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        ...methods.asMap().entries.map((entry) {
-          final i = entry.key;
-          final m = entry.value;
-          final isSelected = selected == i;
-          return Padding(
-            padding:
-                const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: GestureDetector(
-              onTap: () => onChanged(i),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(AppRadius.xl),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.outlineVariant,
-                    width: isSelected ? 2 : 1,
+        RadioGroup<int>(
+          groupValue: selected,
+          onChanged: (v) {
+            if (v != null) onChanged(v);
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: methods.asMap().entries.map((entry) {
+              final i = entry.key;
+              final m = entry.value;
+              final isSelected = selected == i;
+              return Padding(
+                padding:
+                    const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: GestureDetector(
+                  onTap: () => onChanged(i),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.outlineVariant,
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: m.bgColor,
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.md),
+                          ),
+                          child: Icon(m.icon,
+                              color: m.iconColor, size: 22),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Text(
+                            m.label,
+                            style: AppTextStyles.bodyLg.copyWith(
+                              color: AppColors.onSurface,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Radio<int>(
+                          value: i,
+                          activeColor: AppColors.primary,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: m.bgColor,
-                        borderRadius:
-                            BorderRadius.circular(AppRadius.md),
-                      ),
-                      child: Icon(m.icon,
-                          color: m.iconColor, size: 22),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Text(
-                        m.label,
-                        style: AppTextStyles.bodyLg.copyWith(
-                          color: AppColors.onSurface,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    Radio<int>(
-                      value: i,
-                      groupValue: selected,
-                      onChanged: (v) => onChanged(v!),
-                      activeColor: AppColors.primary,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }),
+              );
+            }).toList(),
+          ),
+        ),
       ],
     );
   }

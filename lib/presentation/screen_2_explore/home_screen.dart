@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../widgets/property_card.dart';
 import '../widgets/vibe_bottom_nav_bar.dart';
+import '../blocs/home/home_bloc.dart';
+import '../blocs/home/home_event.dart';
+import '../blocs/home/home_state.dart';
+import '../../data/repositories/mock_property_repository.dart';
 
 /// Màn hình Trang chủ VibeLocals
 /// Route: /home
@@ -34,32 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _Category(icon: Icons.castle_outlined, label: 'Di sản'),
   ];
 
-  final List<_PropertyItem> _properties = const [
-    _PropertyItem(
-      title: 'Villa Hội An Heritage',
-      location: 'Hội An, Quảng Nam',
-      price: '1.500.000đ',
-      rating: 4.9,
-      imageUrl:
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuATw12wuJSe6lpasx57qMl4WNFVhbK-810mYPf-jqxIoiEuIE_QZh3DWA5eSl6WtusGvi5p_jfwlkczC_pTKPUNEhfjd7ZQdHpdRkFNMQDxUiIEca0HWCLr4dt6T8l1UibN03v19cX7jK_E-GgM-bdRpMTFrar6uwpylIIZuEIf3KKWHlYPTHpImyyehuVIm8Dw1WHPHh0qRcdsdR_49iecMYLwfzRP4zPU8MiLG_gQ3x0RkGiTPaak6GQrqySWq4U44bmcPt8RZlA',
-    ),
-    _PropertyItem(
-      title: 'Azure Coast Retreat',
-      location: 'Phú Quốc, Kiên Giang',
-      price: '3.200.000đ',
-      rating: 4.8,
-      imageUrl:
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuAsd-kqNeLv2LKAmQT6OvpBvKnpFS7F8fQPnUNCQjKsgQCNIMv0EJfhEEcQ_gWD0qMuZknn5p-trTvzrKOOBSO64NmkI9dnzmGe6SXQ885tJVIZXMffpSmEl-Zmq6wrL5R8hHnztk-HEI0jVVPuv0KQwmG17tWiOnCeZcJ8FQyq7tnC8RcIXY-RlJ746eI86tYlxH39FAkv3RIxBwB2paBm0c2A8quLEaR7cMSa2utDvZYJYygRuDuuNwtwpKCZXVBwZ9WHlPIWMRw',
-    ),
-    _PropertyItem(
-      title: 'Pine Mist Cabin',
-      location: 'Đà Lạt, Lâm Đồng',
-      price: '1.850.000đ',
-      rating: 5.0,
-      imageUrl:
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuBndx1QwU495BTF-dnU2X9aJOk_kjP-9RwnTFPfndZ1dEfeeCBUzfE9Sdkw65YluLUq7pCVID-yuW2GhidBNBrrBitx5zkooe8anb5W-QEYh8nWtT762KqMZbi5XiEKS5js2BOaBRNBGaKVFbRHFzVx9eRYBXrHfDMAMgNdfONXdncx28A69Ui-KbtY4FdCH6ZHg5mOgzkVQu6bBqbZZ5E0o42bI_yDOBBSltMMsl1kWp4ou4FE3psEAhbcTN8W4NAjT3_aLOQU0lc',
-    ),
-  ];
+  // We will load properties via BLoC now, so we removed the hardcoded _properties list.
 
   void _onNavTap(int index) {
     setState(() => _currentNavIndex = index);
@@ -86,8 +66,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return BlocProvider(
+      create: (context) => HomeBloc(
+        propertyRepository: MockPropertyRepository(),
+      )..add(FetchProperties()),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // Scrollable content
@@ -162,27 +146,52 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
-              // Property list
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md),
-                sliver: SliverList.separated(
-                  itemCount: _properties.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(height: AppSpacing.xxl),
-                  itemBuilder: (context, i) {
-                    final p = _properties[i];
-                    return PropertyCard(
-                      title: p.title,
-                      location: p.location,
-                      priceText: p.price,
-                      rating: p.rating,
-                      imageUrl: p.imageUrl,
-                      onTap: () =>
-                          Navigator.of(context).pushNamed('/property-detail'),
+              // Property list managed by BLoC
+              BlocBuilder<HomeBloc, HomeState>(
+                builder: (context, state) {
+                  if (state is HomeLoading) {
+                    return const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(AppSpacing.xxl),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
                     );
-                  },
-                ),
+                  } else if (state is HomeFailure) {
+                    return SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.xxl),
+                        child: Center(child: Text('Lỗi: ${state.error}')),
+                      ),
+                    );
+                  } else if (state is HomeLoaded) {
+                    final properties = state.properties;
+                    return SliverPadding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md),
+                      sliver: SliverList.separated(
+                        itemCount: properties.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: AppSpacing.xxl),
+                        itemBuilder: (context, i) {
+                          final p = properties[i];
+                          // Format price to VND
+                          final formattedPrice = '${p.pricePerNight.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
+                          
+                          return PropertyCard(
+                            title: p.title,
+                            location: p.location,
+                            priceText: formattedPrice,
+                            rating: p.rating,
+                            imageUrl: p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
+                            onTap: () =>
+                                Navigator.of(context).pushNamed('/property-detail'),
+                          );
+                        },
+                      ),
+                    );
+                  }
+                  return const SliverToBoxAdapter(child: SizedBox.shrink());
+                },
               ),
               // Bottom spacer for nav bar
               const SliverToBoxAdapter(child: SizedBox(height: 120)),
@@ -210,6 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -365,16 +375,4 @@ class _Category {
   final IconData icon;
   final String label;
   const _Category({required this.icon, required this.label});
-}
-
-class _PropertyItem {
-  final String title, location, price, imageUrl;
-  final double rating;
-  const _PropertyItem({
-    required this.title,
-    required this.location,
-    required this.price,
-    required this.rating,
-    required this.imageUrl,
-  });
 }

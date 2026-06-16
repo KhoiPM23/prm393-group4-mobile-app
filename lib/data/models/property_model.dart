@@ -1,0 +1,38 @@
+import '../../domain/entities/property_entity.dart';
+import '../datasources/mock_data.dart';
+
+class PropertyModel extends PropertyEntity {
+  const PropertyModel({
+    required super.id,
+    required super.title,
+    required super.location,
+    required super.pricePerNight,
+    required super.rating,
+    required super.reviewsCount,
+    required super.hostName,
+    required super.hostAvatar,
+    required super.imageUrls,
+    required super.amenities,
+    required super.description,
+  });
+
+  factory PropertyModel.fromJson(Map<String, dynamic> json) {
+    return PropertyModel(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      location: json['location'] as String,
+      pricePerNight: (json['pricePerNight'] as num).toDouble(),
+      rating: (json['rating'] as num).toDouble(),
+      reviewsCount: json['reviewsCount'] as int,
+      hostName: json['hostName'] as String,
+      hostAvatar: json['hostAvatar'] as String,
+      imageUrls: List<String>.from(json['imageUrls']),
+      amenities: List<String>.from(json['amenities']),
+      description: json['description'] as String,
+    );
+  }
+
+  static List<PropertyModel> mockList() {
+    return MockData.getMockProperties().map((e) => PropertyModel.fromJson(e)).toList();
+  }
+}
