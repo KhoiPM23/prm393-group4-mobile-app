@@ -43,7 +43,7 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: AppColors.background,
-      fontFamily: 'BeVietnamPro',
+      // fontFamily: 'BeVietnamPro',
       textTheme: const TextTheme(
         displayLarge: AppTextStyles.displayLg,
         headlineLarge: AppTextStyles.headlineLg,
