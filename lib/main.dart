@@ -1,27 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'core/theme/app_theme.dart';
-
+import 'presentation/module_1_auth/forgot_password_screen.dart';
 // Auth screens
-import 'presentation/screen_1_auth/login_screen.dart';
-import 'presentation/screen_1_auth/register_screen.dart';
-import 'presentation/screen_1_auth/forgot_password_screen.dart';
-import 'presentation/screen_1_auth/reset_password_screen.dart';
-
+import 'presentation/module_1_auth/login_screen.dart';
+import 'presentation/module_1_auth/register_screen.dart';
+import 'presentation/module_1_auth/reset_password_screen.dart';
 // Explore screens
-import 'presentation/screen_2_explore/home_screen.dart';
-
+import 'presentation/module_2_explore/home_screen.dart';
 // Map screens
-import 'presentation/screen_3_map/explore_map_screen.dart';
-
+import 'presentation/module_3_map/explore_map_screen.dart';
+import 'presentation/module_4_booking/booking_confirm_screen.dart';
 // Booking screens
-import 'presentation/screen_4_booking/property_detail_screen.dart';
-import 'presentation/screen_4_booking/booking_confirm_screen.dart';
-
+import 'presentation/module_4_booking/property_detail_screen.dart';
 // Interaction screens
-import 'presentation/screen_5_interaction/chat_screen.dart';
-import 'presentation/screen_5_interaction/notification_center_screen.dart';
-import 'presentation/screen_5_interaction/profile_screen.dart';
+import 'presentation/module_5_interaction/chat_screen.dart';
+import 'presentation/module_5_interaction/notification_center_screen.dart';
+import 'presentation/module_5_interaction/profile_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
