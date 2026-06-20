@@ -79,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
             physics: const BouncingScrollPhysics(),
             slivers: [
               // Top spacer for fixed AppBar
-              const SliverToBoxAdapter(child: SizedBox(height: 80)),
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
               // Search & Filter
               SliverToBoxAdapter(
                 child: Padding(
@@ -184,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             rating: p.rating,
                             imageUrl: p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
                             onTap: () =>
-                                Navigator.of(context).pushNamed('/property-detail'),
+                                Navigator.of(context).pushNamed('/property-detail', arguments: p),
                           );
                         },
                       ),
@@ -232,7 +232,7 @@ class _GlassTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 72,
+      height: 100,
       decoration: BoxDecoration(
         color: AppColors.surface.withValues(alpha: 0.85),
         boxShadow: [

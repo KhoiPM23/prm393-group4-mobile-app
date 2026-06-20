@@ -3,20 +3,13 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../domain/entities/property_entity.dart';
+import '../../data/models/property_model.dart';
 import '../widgets/vibe_cards.dart';
 import '../widgets/vibe_ui_components.dart';
 
 /// Màn hình Chi tiết Địa điểm VibeLocals
 /// Route: /property-detail
-/// Source: chi_ti_t_a_i_m_vibelocals/code.html
-/// Design:
-///   - Full-height hero image with gradient overlay
-///   - Overlay back + favorite buttons
-///   - Property info card (rounded-[32px]) overlapping image
-///   - Host section with Chat Now button
-///   - Room list (RoomCard)
-///   - Amenity chips
-///   - Fixed footer (price + Đặt ngay CTA)
 class PropertyDetailScreen extends StatefulWidget {
   const PropertyDetailScreen({super.key});
 
@@ -28,6 +21,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   bool _isFavorite = true;
   late ScrollController _scrollController;
   bool _showNavBg = false;
+  PropertyEntity? _property;
+  int _selectedRoomIndex = 0; // Theo dõi phòng đang chọn
 
   @override
   void initState() {
@@ -42,6 +37,19 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Lấy dữ liệu từ Arguments truyền vào
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is PropertyEntity) {
+      _property = args;
+    } else {
+      // Fallback: Tự lấy dữ liệu mẫu đầu tiên để test nếu chưa có truyền từ Home
+      _property = PropertyModel.mockList().first;
+    }
+  }
+
+  @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
@@ -49,6 +57,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_property == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    final p = _property!;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -58,26 +69,22 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // ===== FIX: GỘP HERO VÀ CARD VÀO MỘT SLIVER DUY NHẤT =====
               SliverToBoxAdapter(
                 child: Stack(
-                  clipBehavior: Clip
-                      .none, // Cho phép các phần tử con trồi ra ngoài thoải mái
+                  clipBehavior: Clip.none,
                   children: [
-                    // Phần hình nền có khoảng đệm phía dưới để đẩy layout
                     Padding(
                       padding: const EdgeInsets.only(bottom: 40.0),
                       child: _HeroSection(
-                        imageUrl:
-                            'https://lh3.googleusercontent.com/aida-public/AB6AXuCBkRgELSDZK6S_BspKR_p3xyP69vhJoH2QFvGIMDLE26xbdiQZ_GBbm5dhYSHaUpbKYxo6VZgexri3WnP4crxXBe92ZUYCH8Hkj2vlUlJKkFVgB2zG6VugzynNJpT_4Aq5kU_bKskMLUYLLQCwNAQK1JOBhq2urIdCzeMWgbMcMR23maG4ETUtyygscSyvl-gjigOJ0pUS1_3VVw_Rgmunpo4JSUUDGpsIQRVGl23A9ucg_8hfsL9w7Lt22VesZzareiDvqROQ41s',
+                        imageUrl: p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
                       ),
                     ),
-                    // Thẻ thông tin được neo chặt ở đáy Stack, đè lên ảnh chuẩn 100%
                     Positioned(
                       bottom: 0,
                       left: AppSpacing.md,
                       right: AppSpacing.md,
                       child: _PropertyInfoCard(
+                        property: p,
                         onChatTap: () =>
                             Navigator.of(context).pushNamed('/chat'),
                       ),
@@ -86,11 +93,38 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                 ),
               ),
 
-              // Room List Section (Giữ nguyên phần phía dưới)
+              // Property Description
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
                       AppSpacing.md, AppSpacing.lg, AppSpacing.md, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Giới thiệu',
+                        style: AppTextStyles.headlineLgMobile.copyWith(
+                          color: AppColors.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        p.description,
+                        style: AppTextStyles.bodyMd.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Room List Section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md, AppSpacing.xxl, AppSpacing.md, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -104,7 +138,12 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           ),
                         ),
                       ),
-                      _RoomList(),
+                      _RoomList(
+                        rooms: p.rooms,
+                        selectedIndex: _selectedRoomIndex,
+                        onRoomSelected: (index) =>
+                            setState(() => _selectedRoomIndex = index),
+                      ),
                     ],
                   ),
                 ),
@@ -130,28 +169,15 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       Wrap(
                         spacing: AppSpacing.sm,
                         runSpacing: AppSpacing.sm,
-                        children: const [
-                          VibeChip(
-                              label: 'Hồ bơi vô cực',
-                              icon: Icons.pool_outlined),
-                          VibeChip(
-                              label: 'Nhà hàng Á - Âu',
-                              icon: Icons.restaurant_outlined),
-                          VibeChip(
-                              label: 'Spa & Massage', icon: Icons.spa_outlined),
-                          VibeChip(
-                              label: 'Cho thuê xe đạp',
-                              icon: Icons.directions_bike_outlined),
-                          VibeChip(
-                              label: 'Xe đưa đón sân bay',
-                              icon: Icons.airport_shuttle_outlined),
-                        ],
+                        children: p.amenities.map((a) => VibeChip(
+                          label: a,
+                          icon: _getAmenityIcon(a),
+                        )).toList(),
                       ),
                     ],
                   ),
                 ),
               ),
-              // Bottom spacer for fixed footer
               const SliverToBoxAdapter(child: SizedBox(height: 120)),
             ],
           ),
@@ -174,12 +200,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Back button
                       _OverlayButton(
                         icon: Icons.arrow_back,
                         onTap: () => Navigator.of(context).pop(),
                       ),
-                      // Favorite button
                       _OverlayButton(
                         icon: _isFavorite
                             ? Icons.favorite
@@ -201,12 +225,35 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             left: 0,
             right: 0,
             child: _BookingFooter(
-              onBookTap: () => Navigator.of(context).pushNamed('/booking'),
+              price: p.rooms.isNotEmpty 
+                ? p.rooms[_selectedRoomIndex].pricePerNight 
+                : p.pricePerNight,
+              onBookTap: () {
+                final selectedRoom = p.rooms.isNotEmpty ? p.rooms[_selectedRoomIndex] : null;
+                Navigator.of(context).pushNamed(
+                  '/booking', 
+                  arguments: {
+                    'property': p,
+                    'room': selectedRoom,
+                  },
+                );
+              },
             ),
           ),
         ],
       ),
     );
+  }
+
+  IconData _getAmenityIcon(String name) {
+    switch (name.toLowerCase()) {
+      case 'wifi': return Icons.wifi;
+      case 'hồ bơi': return Icons.pool;
+      case 'máy lạnh': return Icons.ac_unit;
+      case 'bếp': return Icons.kitchen;
+      case 'ăn sáng': return Icons.restaurant;
+      default: return Icons.check_circle_outline;
+    }
   }
 }
 
@@ -289,8 +336,9 @@ class _OverlayButton extends StatelessWidget {
 }
 
 class _PropertyInfoCard extends StatelessWidget {
+  final PropertyEntity property;
   final VoidCallback? onChatTap;
-  const _PropertyInfoCard({this.onChatTap});
+  const _PropertyInfoCard({required this.property, this.onChatTap});
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +360,6 @@ class _PropertyInfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Name + Rating
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -321,7 +368,7 @@ class _PropertyInfoCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Villa Hội An Heritage',
+                      property.title,
                       style: AppTextStyles.headlineLgMobile.copyWith(
                         color: AppColors.primary,
                       ),
@@ -333,7 +380,7 @@ class _PropertyInfoCard extends StatelessWidget {
                             size: 16, color: AppColors.onSurfaceVariant),
                         const SizedBox(width: 4),
                         Text(
-                          'Hội An, Quảng Nam',
+                          property.location,
                           style: AppTextStyles.bodyMd.copyWith(
                             color: AppColors.onSurfaceVariant,
                           ),
@@ -343,7 +390,6 @@ class _PropertyInfoCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // Star rating
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -364,7 +410,7 @@ class _PropertyInfoCard extends StatelessWidget {
                         size: 16, color: AppColors.onSecondaryFixed),
                     const SizedBox(width: 4),
                     Text(
-                      '4.9',
+                      property.rating.toString(),
                       style: AppTextStyles.labelLg.copyWith(
                         color: AppColors.onSecondaryFixed,
                       ),
@@ -376,7 +422,6 @@ class _PropertyInfoCard extends StatelessWidget {
           ),
           const Divider(
               height: 32, color: AppColors.outlineVariant, thickness: 0.5),
-          // Host info
           Row(
             children: [
               ClipOval(
@@ -384,7 +429,7 @@ class _PropertyInfoCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   child: Image.network(
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuC1epfAd2ZM_Jo90tYfC8G_WiOz1X6lqrZkRKUX6EHhfrzjRzqUyetYLCChtSTPNecQEULMFKOFGNQ9vug9RTHfU35P28aBB1TQhQj4bnoajtgVTRugeGsto0pXS5f3b9IKzhyFzfAACzP_7SGSx3VtOZnnJ5DvHIC9Avh8O2o_uXeoE3KtQhXKybhkr8dCNN85itcF9MgS1fkfmSBeGDxYZS4obhDIi_cCvS5A0kvF08yVNEZiw_yhWa-CsKhlAcHLhg_WVB5luWg',
+                    property.hostAvatar,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => const CircleAvatar(
                       backgroundColor: AppColors.surfaceContainerHigh,
@@ -404,7 +449,7 @@ class _PropertyInfoCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Minh Khôi',
+                    property.hostName,
                     style: AppTextStyles.titleLg.copyWith(
                       color: AppColors.onSurface,
                     ),
@@ -412,7 +457,6 @@ class _PropertyInfoCard extends StatelessWidget {
                 ],
               ),
               const Spacer(),
-              // Chat now button - min 48x touch target
               OutlinedButton.icon(
                 onPressed: onChatTap,
                 icon: const Icon(Icons.chat_outlined, size: 18),
@@ -438,58 +482,56 @@ class _PropertyInfoCard extends StatelessWidget {
 }
 
 class _RoomList extends StatelessWidget {
+  final List<dynamic> rooms; // RoomEntity
+  final int selectedIndex;
+  final Function(int) onRoomSelected;
+
+  const _RoomList({
+    required this.rooms,
+    required this.selectedIndex,
+    required this.onRoomSelected,
+  });
+
   @override
   Widget build(BuildContext context) {
-    final rooms = [
-      _RoomData(
-        name: 'Phòng Suite Deluxe',
-        price: '1.800.000đ',
-        bed: 'King',
-        area: '45m²',
-        amenity: 'Free Wifi',
-        imageUrl:
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuBg6tRza7A8KGiNyFdKi4zvT8fDDxv_XsMjnNABCkNKk9a_CjFR_ABvSva8PQ7t2ziuEGBJpCn9Qe786Gzfe-XL0QfBfuJJHoBgd-ii0deyra5BXgFX5rHf2iYR-Co4YjjH-OQtg-nASjzFfZbXrjkAvtUVE-C-TPAk8-dWJ36yia_7w23YxgD8-du7BxBg9s34qRy3I4nHPr2GDEaQLkjMvJzqbjZHqQwJ08On4aPY8ASRO47bxrA3dNxHTFHfD_FT_jSFCKV5thQ',
-      ),
-      _RoomData(
-        name: 'Phòng Double Premium',
-        price: '1.500.000đ',
-        bed: 'Double',
-        area: '35m²',
-        amenity: 'AC',
-        imageUrl:
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuAyikkowLJbEUMBfpEPpkOSvX9Gb6cigJnnFf4ageqTa6rbp7w8cf1BlnSj0tM4amzR2xPihtTJ_YMIkOO9cak5l4ElB8dTVshoXvxcbB8anIpdwD9Ey46KA1n7Qv7f67YjdnjydnBpS4mjsecqAsZRSqRXGuT8uzvNU15XNldJT6J1O7U19G2SrEyyI6UEYSwp83o0jWe1sw8lP5rFdeWveaE27fea0Ok5YARzLpDqBET1433i_NWWBhKE8oN-t4seSZUCWhKUhRE',
-      ),
-      _RoomData(
-        name: 'Phòng Single Standard',
-        price: '1.200.000đ',
-        bed: 'Single',
-        area: '25m²',
-        amenity: 'Mini Bar',
-        imageUrl:
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuCKryG78Ksz61bbvQfOf-BQu_FlIJAcm8f3jwilrBlGcS77oCeWd5FjEPOXbO-bfBEZIe2i7NQhiFR7t-P1ERwyW0mkII3Tgzqj8E7SEbzg9knroHjGX-Z4G0pzfYsbLQt7muZmphKxfxSQ325Vja7nnV9podcg3N8-KmS5lFWcFS4CoFNB7VUJIjBmZavQBxD_OOJNQU1b9bpZBR2VuiQgX8qEkvYn9Tcv--zEIlcaNttoHzslj3CYnJiSPwIXp1P5iz67N2ALZVs',
-      ),
-    ];
+    if (rooms.isEmpty) {
+      return const Center(child: Text('Khách sạn hiện chưa có thông tin phòng.'));
+    }
+
     return Column(
-      children: rooms
-          .map((r) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: RoomCard(
-                  name: r.name,
-                  priceText: r.price,
-                  imageUrl: r.imageUrl,
-                  bedType: r.bed,
-                  area: r.area,
-                  amenity: r.amenity,
-                ),
-              ))
-          .toList(),
+      children: List.generate(rooms.length, (i) {
+        final r = rooms[i];
+        final isSelected = selectedIndex == i;
+        // Format VND
+        final formattedPrice = '${r.pricePerNight.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (m) => "${m[1]}.")}đ';
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+          child: Container(
+            decoration: isSelected ? BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.card),
+              border: Border.all(color: AppColors.primary, width: 2),
+            ) : null,
+            child: RoomCard(
+              name: r.title,
+              priceText: formattedPrice,
+              imageUrl: r.imageUrls.isNotEmpty ? r.imageUrls.first : '',
+              bedType: r.type,
+              area: '35m²', // Giả định diện tích nếu Entity chưa có
+              amenity: r.amenities.isNotEmpty ? r.amenities.first : 'Wifi',
+              onTap: () => onRoomSelected(i),
+            ),
+          ),
+        );
+      }),
     );
   }
 }
 
 class _BookingFooter extends StatelessWidget {
+  final double price;
   final VoidCallback? onBookTap;
-  const _BookingFooter({this.onBookTap});
+  const _BookingFooter({required this.price, this.onBookTap});
 
   @override
   Widget build(BuildContext context) {
@@ -528,7 +570,7 @@ class _BookingFooter extends StatelessWidget {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text: '1.500.000đ',
+                          text: '${price.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (m) => "${m[1]}.")}đ',
                           style: AppTextStyles.headlineLgMobile
                               .copyWith(color: AppColors.primary),
                         ),

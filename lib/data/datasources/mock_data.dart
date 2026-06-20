@@ -33,6 +33,26 @@ class MockData {
         'longitude': 108.2215,
         'city': 'Đà Nẵng',
         'district': 'Hải Châu',
+        'rooms': [
+          {
+            'id': 'r1_p1',
+            'title': 'Studio Cao Cấp',
+            'type': 'Single',
+            'pricePerNight': 1850000.0,
+            'amenities': ['Wifi', 'Máy lạnh', 'Bếp'],
+            'imageUrls': ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'],
+            'description': 'Phòng studio rộng rãi với đầy đủ tiện nghi.'
+          },
+          {
+            'id': 'r2_p1',
+            'title': 'Căn Hộ 2 Phòng Ngủ',
+            'type': 'Double',
+            'pricePerNight': 2850000.0,
+            'amenities': ['Wifi', 'Máy lạnh', 'Bếp', 'Ban công'],
+            'imageUrls': ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688'],
+            'description': 'Phù hợp cho gia đình hoặc nhóm bạn.'
+          }
+        ]
       },
       {
         'id': 'p2',
@@ -54,6 +74,26 @@ class MockData {
         'longitude': 108.2483,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
+        'rooms': [
+          {
+            'id': 'r1_p2',
+            'title': 'Phòng Deluxe Hướng Biển',
+            'type': 'Double',
+            'pricePerNight': 2500000.0,
+            'amenities': ['Biển', 'Wifi', 'Máy lạnh'],
+            'imageUrls': ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b'],
+            'description': 'Thức dậy với tiếng sóng vỗ rì rào.'
+          },
+          {
+            'id': 'r2_p2',
+            'title': 'Villa Cận Biển 3 Phòng Ngủ',
+            'type': 'Villa',
+            'pricePerNight': 7500000.0,
+            'amenities': ['Hồ bơi riêng', 'Sân vườn', 'Bếp'],
+            'imageUrls': ['https://images.unsplash.com/photo-1542314831-068cd1dbfeeb'],
+            'description': 'Đỉnh cao của sự sang trọng và riêng tư.'
+          }
+        ]
       },
       {
         'id': 'p3',
@@ -75,6 +115,17 @@ class MockData {
         'longitude': 108.2614,
         'city': 'Đà Nẵng',
         'district': 'Sơn Trà',
+        'rooms': [
+          {
+            'id': 'r1_p3',
+            'title': 'Phòng Nhà Gỗ',
+            'type': 'Single',
+            'pricePerNight': 1200000.0,
+            'amenities': ['Yên tĩnh', 'Máy lạnh'],
+            'imageUrls': ['https://images.unsplash.com/photo-1449156001437-3a16c1dfbe2c'],
+            'description': 'Trải nghiệm cuộc sống gần gũi thiên nhiên.'
+          }
+        ]
       },
       {
         'id': 'p4',
@@ -96,6 +147,17 @@ class MockData {
         'longitude': 108.2238,
         'city': 'Đà Nẵng',
         'district': 'Hải Châu',
+        'rooms': [
+          {
+            'id': 'r1_p4',
+            'title': 'Studio Cao Cấp View Sông',
+            'type': 'Studio',
+            'pricePerNight': 1950000.0,
+            'amenities': ['Wifi', 'Máy lạnh', 'View sông'],
+            'imageUrls': ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'],
+            'description': 'Phòng studio view trọn sông Hàn.'
+          }
+        ]
       },
       {
         'id': 'p5',
@@ -123,6 +185,17 @@ class MockData {
         'longitude': 108.2461,
         'city': 'Đà Nẵng',
         'district': 'Sơn Trà',
+        'rooms': [
+          {
+            'id': 'r1_p5',
+            'title': 'Boutique Room',
+            'type': 'Double',
+            'pricePerNight': 1350000.0,
+            'amenities': ['Wifi', 'Máy lạnh', 'Gần biển'],
+            'imageUrls': ['https://images.unsplash.com/photo-1566073771259-6a8506099945'],
+            'description': 'Phòng phong cách boutique ấm cúng.'
+          }
+        ]
       },
       {
         'id': 'p6',
@@ -150,6 +223,17 @@ class MockData {
         'longitude': 108.2445,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
+        'rooms': [
+          {
+            'id': 'r1_p6',
+            'title': 'Phòng Cozy Single',
+            'type': 'Single',
+            'pricePerNight': 950000.0,
+            'amenities': ['Wifi', 'Máy lạnh'],
+            'imageUrls': ['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af'],
+            'description': 'Phòng nhỏ gọn, tiện nghi.'
+          }
+        ]
       },
       {
         'id': 'p7',
@@ -177,6 +261,17 @@ class MockData {
         'longitude': 108.2325,
         'city': 'Đà Nẵng',
         'district': 'Sơn Trà',
+        'rooms': [
+          {
+            'id': 'r1_p7',
+            'title': 'Căn Hộ View Cầu Rồng',
+            'type': 'Apartment',
+            'pricePerNight': 1600000.0,
+            'amenities': ['Wifi', 'Bếp', 'View đẹp'],
+            'imageUrls': ['https://images.unsplash.com/photo-1493809842364-78817add7ffb'],
+            'description': 'Tận hưởng view cầu Rồng từ ban công.'
+          }
+        ]
       },
       {
         'id': 'p8',
@@ -204,6 +299,17 @@ class MockData {
         'longitude': 108.2204,
         'city': 'Đà Nẵng',
         'district': 'Cẩm Lệ',
+        'rooms': [
+          {
+            'id': 'r1_p8',
+            'title': 'Green Villa Full House',
+            'type': 'Villa',
+            'pricePerNight': 2200000.0,
+            'amenities': ['Hồ bơi', 'Sân vườn', 'BBQ'],
+            'imageUrls': ['https://images.unsplash.com/photo-1580587771525-78b9dba3b914'],
+            'description': 'Không gian xanh mát cho cả gia đình.'
+          }
+        ]
       }
     ];
   }
@@ -212,21 +318,39 @@ class MockData {
     return [
       {
         'id': 'b1',
+        'userId': 'u1',
+        'propertyId': 'p1',
         'property': getMockProperties()[0],
         'checkIn': '2026-10-12T14:00:00Z',
         'checkOut': '2026-10-15T12:00:00Z',
         'guests': 2,
-        'totalPrice': 5550000.0,
-        'status': 'Sắp đi',
+        'basePrice': 1850000.0,
+        'serviceFee': 150000.0,
+        'tax': 185000.0,
+        'discountAmount': 0.0,
+        'totalPrice': 5885000.0,
+        'status': 'confirmed',
+        'updatedAt': '2026-10-10T10:00:00Z',
+        'paymentMethod': 'MoMo',
+        'transactionId': 'TRX-999-001',
       },
       {
         'id': 'b2',
+        'userId': 'u1',
+        'propertyId': 'p2',
         'property': getMockProperties()[1],
         'checkIn': '2026-08-05T14:00:00Z',
         'checkOut': '2026-08-08T12:00:00Z',
         'guests': 4,
-        'totalPrice': 4500000.0,
-        'status': 'Đã hoàn thành',
+        'basePrice': 2500000.0,
+        'serviceFee': 200000.0,
+        'tax': 250000.0,
+        'discountAmount': 500000.0,
+        'totalPrice': 7450000.0,
+        'status': 'completed',
+        'updatedAt': '2026-08-09T09:00:00Z',
+        'paymentMethod': 'Bank Transfer',
+        'transactionId': 'TRX-888-002',
       }
     ];
   }

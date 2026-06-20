@@ -1,3 +1,5 @@
+import 'room_entity.dart';
+
 class PropertyEntity {
   final String id;
   final String title;
@@ -10,6 +12,7 @@ class PropertyEntity {
   final List<String> imageUrls;
   final List<String> amenities;
   final String description;
+  final List<RoomEntity> rooms; // MỚI: Danh sách phòng
 
   // ===== THÀNH PHẦN MỞ RỘNG CHO MODULE MAP =====
   final double latitude; // Kinh độ để chấm ghim bản đồ
@@ -29,6 +32,7 @@ class PropertyEntity {
     required this.imageUrls,
     required this.amenities,
     required this.description,
+    required this.rooms,
     required this.latitude,
     required this.longitude,
     required this.city,
