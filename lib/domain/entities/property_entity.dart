@@ -14,7 +14,7 @@ class PropertyEntity {
   final String description;
   final List<RoomEntity> rooms; // MỚI: Danh sách phòng
 
-  // ===== THÀNH PHẦN MỞ RỘNG CHO MODULE MAP =====
+  final List<String> categories; // Thêm trường danh mục
   final double latitude; // Kinh độ để chấm ghim bản đồ
   final double longitude; // Vĩ độ để chấm ghim bản đồ
   final String city; // Thành phố (Mặc định: Đà Nẵng)
@@ -33,6 +33,7 @@ class PropertyEntity {
     required this.amenities,
     required this.description,
     required this.rooms,
+    required this.categories,
     required this.latitude,
     required this.longitude,
     required this.city,
