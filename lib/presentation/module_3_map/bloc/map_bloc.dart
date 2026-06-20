@@ -96,14 +96,18 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   List<PropertyEntity> _applyFilteringPipeline(MapState targetState) {
     return _masterList.where((property) {
       // Pipe 1: Lọc theo thành phố
-      if (property.city.toLowerCase() != targetState.selectedCity.toLowerCase())
+      if (property.city.toLowerCase() !=
+          targetState.selectedCity.toLowerCase()) {
         return false;
+      }
 
       // Pipe 2: Lọc theo quận huyện (nếu chọn cụ thể)
       if (targetState.selectedDistrict != 'Tất cả' &&
           property.district.toLowerCase() !=
               targetState.selectedDistrict.toLowerCase()) {
-        return false;
+        {
+          return false;
+        }
       }
 
       // Pipe 3: Lọc theo tên từ khóa nhập vào
@@ -111,20 +115,28 @@ class MapBloc extends Bloc<MapEvent, MapState> {
           !property.title
               .toLowerCase()
               .contains(targetState.searchQuery.toLowerCase())) {
-        return false;
+        {
+          return false;
+        }
       }
 
       // Pipe 4: Lọc theo khoảng giá
       if (targetState.minPrice != null &&
-          property.pricePerNight < targetState.minPrice!) return false;
+          property.pricePerNight < targetState.minPrice!) {
+        return false;
+      }
       if (targetState.maxPrice != null &&
-          property.pricePerNight > targetState.maxPrice!) return false;
+          property.pricePerNight > targetState.maxPrice!) {
+        return false;
+      }
 
       // Pipe 5: Lọc theo danh sách tiện ích tích hợp
       if (targetState.selectedAmenities.isNotEmpty) {
         final hasAll = targetState.selectedAmenities
             .every((a) => property.amenities.contains(a));
-        if (!hasAll) return false;
+        if (!hasAll) {
+          return false;
+        }
       }
 
       return true;

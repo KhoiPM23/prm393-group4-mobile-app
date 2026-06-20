@@ -1,10 +1,11 @@
+// ignore_for_file: unused_element
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_text_styles.dart';
-import '../../domain/entities/property_entity.dart';
 import '../../data/models/property_model.dart';
+import '../../domain/entities/property_entity.dart';
 import '../widgets/vibe_cards.dart';
 import '../widgets/vibe_ui_components.dart';
 
@@ -57,7 +58,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_property == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_property == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     final p = _property!;
 
     return Scaffold(
@@ -76,7 +79,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 40.0),
                       child: _HeroSection(
-                        imageUrl: p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
+                        imageUrl:
+                            p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
                       ),
                     ),
                     Positioned(
@@ -169,10 +173,12 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       Wrap(
                         spacing: AppSpacing.sm,
                         runSpacing: AppSpacing.sm,
-                        children: p.amenities.map((a) => VibeChip(
-                          label: a,
-                          icon: _getAmenityIcon(a),
-                        )).toList(),
+                        children: p.amenities
+                            .map((a) => VibeChip(
+                                  label: a,
+                                  icon: _getAmenityIcon(a),
+                                ))
+                            .toList(),
                       ),
                     ],
                   ),
@@ -225,13 +231,14 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
             left: 0,
             right: 0,
             child: _BookingFooter(
-              price: p.rooms.isNotEmpty 
-                ? p.rooms[_selectedRoomIndex].pricePerNight 
-                : p.pricePerNight,
+              price: p.rooms.isNotEmpty
+                  ? p.rooms[_selectedRoomIndex].pricePerNight
+                  : p.pricePerNight,
               onBookTap: () {
-                final selectedRoom = p.rooms.isNotEmpty ? p.rooms[_selectedRoomIndex] : null;
+                final selectedRoom =
+                    p.rooms.isNotEmpty ? p.rooms[_selectedRoomIndex] : null;
                 Navigator.of(context).pushNamed(
-                  '/booking', 
+                  '/booking',
                   arguments: {
                     'property': p,
                     'room': selectedRoom,
@@ -247,12 +254,18 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
   IconData _getAmenityIcon(String name) {
     switch (name.toLowerCase()) {
-      case 'wifi': return Icons.wifi;
-      case 'hồ bơi': return Icons.pool;
-      case 'máy lạnh': return Icons.ac_unit;
-      case 'bếp': return Icons.kitchen;
-      case 'ăn sáng': return Icons.restaurant;
-      default: return Icons.check_circle_outline;
+      case 'wifi':
+        return Icons.wifi;
+      case 'hồ bơi':
+        return Icons.pool;
+      case 'máy lạnh':
+        return Icons.ac_unit;
+      case 'bếp':
+        return Icons.kitchen;
+      case 'ăn sáng':
+        return Icons.restaurant;
+      default:
+        return Icons.check_circle_outline;
     }
   }
 }
@@ -495,7 +508,8 @@ class _RoomList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (rooms.isEmpty) {
-      return const Center(child: Text('Khách sạn hiện chưa có thông tin phòng.'));
+      return const Center(
+          child: Text('Khách sạn hiện chưa có thông tin phòng.'));
     }
 
     return Column(
@@ -503,15 +517,18 @@ class _RoomList extends StatelessWidget {
         final r = rooms[i];
         final isSelected = selectedIndex == i;
         // Format VND
-        final formattedPrice = '${r.pricePerNight.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (m) => "${m[1]}.")}đ';
+        final formattedPrice =
+            '${r.pricePerNight.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (m) => "${m[1]}.")}đ';
 
         return Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.md),
           child: Container(
-            decoration: isSelected ? BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.card),
-              border: Border.all(color: AppColors.primary, width: 2),
-            ) : null,
+            decoration: isSelected
+                ? BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    border: Border.all(color: AppColors.primary, width: 2),
+                  )
+                : null,
             child: RoomCard(
               name: r.title,
               priceText: formattedPrice,
@@ -570,7 +587,8 @@ class _BookingFooter extends StatelessWidget {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text: '${price.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (m) => "${m[1]}.")}đ',
+                          text:
+                              '${price.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (m) => "${m[1]}.")}đ',
                           style: AppTextStyles.headlineLgMobile
                               .copyWith(color: AppColors.primary),
                         ),
