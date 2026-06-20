@@ -2,27 +2,22 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
+import '../../domain/entities/property_entity.dart';
+import '../../domain/entities/room_entity.dart';
+import '../../data/models/property_model.dart';
 import '../widgets/vibe_ui_components.dart';
 
 /// Màn hình Xác nhận Đặt phòng VibeLocals
-/// Route: /booking
-/// Source: x_c_nh_n_t_ph_ng_vibelocals/code.html
-/// Design:
-///   - Glassmorphic AppBar (back + title "Xác nhận đặt phòng")
-///   - Summary card (room thumbnail + name + location)
-///   - Interactive Calendar date picker (tháng 6/2026)
-///   - Billing details (price breakdown, promo code input, total)
-///   - Payment method radio selector (MoMo, Ngân hàng, QR)
-///   - Fixed bottom CTA "Xác nhận & Thanh toán"
 class BookingConfirmScreen extends StatefulWidget {
   const BookingConfirmScreen({super.key});
 
   @override
-  State<BookingConfirmScreen> createState() =>
-      _BookingConfirmScreenState();
+  State<BookingConfirmScreen> createState() => _BookingConfirmScreenState();
 }
 
 class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
+  PropertyEntity? _property;
+  RoomEntity? _room;
   DateTime? _checkIn;
   DateTime? _checkOut;
   int _selectedPayment = 0; // 0=MoMo, 1=Bank, 2=QR
@@ -31,8 +26,31 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
   bool _isLoading = false;
 
   // Current viewing month
-  int _viewMonth = 6; // June
-  int _viewYear = 2026;
+  int _viewMonth = DateTime.now().month;
+  int _viewYear = DateTime.now().year;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    
+    if (args is Map<String, dynamic>) {
+      _property = args['property'] as PropertyEntity?;
+      _room = args['room'] as RoomEntity?;
+    } else if (args is PropertyEntity) {
+      _property = args;
+    }
+
+    // Fallback để đảm bảo UI không bao giờ bị null
+    if (_property == null) {
+      try {
+        _property = PropertyModel.mockList().first;
+        _room = _property?.rooms.first;
+      } catch (e) {
+        // ...
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -42,6 +60,12 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
 
   void _selectDate(int day) {
     final date = DateTime(_viewYear, _viewMonth, day);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    // Chặn chọn ngày trong quá khứ
+    if (date.isBefore(today)) return;
+
     setState(() {
       if (_checkIn == null || (_checkOut != null)) {
         _checkIn = date;
@@ -63,12 +87,21 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
 
   bool _isStart(int day) {
     if (_checkIn == null) return false;
-    return DateTime(_viewYear, _viewMonth, day) == _checkIn;
+    final d = DateTime(_viewYear, _viewMonth, day);
+    return d.year == _checkIn!.year && d.month == _checkIn!.month && d.day == _checkIn!.day;
   }
 
   bool _isEnd(int day) {
     if (_checkOut == null) return false;
-    return DateTime(_viewYear, _viewMonth, day) == _checkOut;
+    final d = DateTime(_viewYear, _viewMonth, day);
+    return d.year == _checkOut!.year && d.month == _checkOut!.month && d.day == _checkOut!.day;
+  }
+
+  bool _isPast(int day) {
+    final date = DateTime(_viewYear, _viewMonth, day);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return date.isBefore(today);
   }
 
   int get _nights {
@@ -76,11 +109,13 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
     return _checkOut!.difference(_checkIn!).inDays;
   }
 
-  double get _roomPrice => 1800000;
-  double get _serviceFee => 100000;
-  double get _promoDiscount => _isPromoApplied ? 180000 : 0;
-  double get _total =>
-      (_roomPrice * _nights) + _serviceFee - _promoDiscount;
+  // ===== LOGIC TÍNH TOÁN (ĐẢM BẢO DOUBLE) =====
+  double get _roomPrice => _room?.pricePerNight ?? _property?.pricePerNight ?? 0.0;
+  double get _subtotal => _roomPrice * _nights;
+  double get _serviceFee => _subtotal * 0.05; 
+  double get _tax => _subtotal * 0.08;
+  double get _promoDiscount => _isPromoApplied ? (_subtotal * 0.1) : 0.0;
+  double get _total => _subtotal + _serviceFee + _tax - _promoDiscount;
 
   String _formatVnd(double amount) {
     final formatted = amount.toStringAsFixed(0).replaceAllMapped(
@@ -91,18 +126,20 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
   }
 
   Future<void> _handleConfirm() async {
+    if (_property == null) return;
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(milliseconds: 1500));
     if (!mounted) return;
     setState(() => _isLoading = false);
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => _BookingSuccessDialog(
+        propertyName: _room?.title ?? _property!.title,
         onClose: () {
           Navigator.of(context).pop();
-          Navigator.of(context)
-              .pushNamedAndRemoveUntil('/home', (_) => false);
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
         },
       ),
     );
@@ -110,38 +147,28 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_property == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // Top AppBar
+          // Glassmorphic Top AppBar
           Container(
             color: AppColors.surface.withValues(alpha: 0.9),
             child: SafeArea(
               bottom: false,
               child: Container(
                 height: 64,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                    ),
-                  ],
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)],
                 ),
                 child: Row(
                   children: [
                     IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back,
-                          color: AppColors.primary),
-                      style: IconButton.styleFrom(
-                        minimumSize: const Size(
-                            AppTouchTarget.minSize,
-                            AppTouchTarget.minSize),
-                      ),
+                      icon: const Icon(Icons.arrow_back, color: AppColors.primary),
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -164,10 +191,11 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Summary Card
-                  _SummaryCard(),
+                  _SummaryCard(
+                  property: _property!,
+                  room: _room,
+                ),
                   const SizedBox(height: AppSpacing.md),
-                  // Calendar Section
                   _CalendarSection(
                     month: _viewMonth,
                     year: _viewYear,
@@ -177,51 +205,34 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
                     isInRange: _isInRange,
                     isStart: _isStart,
                     isEnd: _isEnd,
-                    onPrevMonth: () {
-                      setState(() {
-                        if (_viewMonth == 1) {
-                          _viewMonth = 12;
-                          _viewYear--;
-                        } else {
-                          _viewMonth--;
-                        }
-                      });
-                    },
-                    onNextMonth: () {
-                      setState(() {
-                        if (_viewMonth == 12) {
-                          _viewMonth = 1;
-                          _viewYear++;
-                        } else {
-                          _viewMonth++;
-                        }
-                      });
-                    },
+                    isPast: _isPast,
+                    onPrevMonth: () => setState(() {
+                      if (_viewMonth == 1) { _viewMonth = 12; _viewYear--; } else { _viewMonth--; }
+                    }),
+                    onNextMonth: () => setState(() {
+                      if (_viewMonth == 12) { _viewMonth = 1; _viewYear++; } else { _viewMonth++; }
+                    }),
                     nights: _nights,
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  // Billing Details
                   _BillingSection(
                     nights: _nights,
                     roomPrice: _roomPrice,
                     serviceFee: _serviceFee,
+                    tax: _tax,
                     promoDiscount: _promoDiscount,
                     total: _total,
                     promoController: _promoController,
                     isPromoApplied: _isPromoApplied,
                     onApplyPromo: () {
-                      if (_promoController.text.isNotEmpty) {
-                        setState(() => _isPromoApplied = true);
-                      }
+                      if (_promoController.text.isNotEmpty) setState(() => _isPromoApplied = true);
                     },
                     formatVnd: _formatVnd,
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  // Payment Method
                   _PaymentMethodSection(
                     selected: _selectedPayment,
-                    onChanged: (v) =>
-                        setState(() => _selectedPayment = v),
+                    onChanged: (v) => setState(() => _selectedPayment = v),
                   ),
                   const SizedBox(height: 100),
                 ],
@@ -232,13 +243,7 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
           Container(
             decoration: BoxDecoration(
               color: AppColors.surface.withValues(alpha: 0.9),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 20, offset: const Offset(0, -4))],
             ),
             child: SafeArea(
               top: false,
@@ -248,8 +253,7 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
                   label: 'Xác nhận & Thanh toán',
                   isLoading: _isLoading,
                   trailingIcon: Icons.double_arrow,
-                  onPressed:
-                      _nights > 0 ? _handleConfirm : null,
+                  onPressed: _nights > 0 ? _handleConfirm : null,
                 ),
               ),
             ),
@@ -260,23 +264,28 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
   }
 }
 
-// ===== SUB-WIDGETS =====
+// ===== SUB-WIDGETS (RESTORED LAYOUT) =====
 
 class _SummaryCard extends StatelessWidget {
+  final PropertyEntity property;
+  final RoomEntity? room;
+  const _SummaryCard({required this.property, this.room});
+
   @override
   Widget build(BuildContext context) {
+    final title = room?.title ?? property.title;
+    final location = room != null ? property.title : property.location;
+    final imageUrl = room?.imageUrls.isNotEmpty == true 
+        ? room!.imageUrls.first 
+        : (property.imageUrls.isNotEmpty ? property.imageUrls.first : '');
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: AppColors.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4)],
       ),
       child: Row(
         children: [
@@ -286,11 +295,9 @@ class _SummaryCard extends StatelessWidget {
               width: 88,
               height: 88,
               child: Image.network(
-                'https://lh3.googleusercontent.com/aida-public/AB6AXuBdI9YKJp8xOzG1QeRhnSWDHvyHD5fIL6DoN3rrun6OuYzBZ1ABj9c7n0szgnKu9ZNB45GiPuWQmfNnFKp1PqbBWbWB5OMJRpGk1dFUbeE-uKXJiK10y8MMN1gWZGMsIZ11lJBNet2J-MnwqdvnSPlAZZxtmbt0BPyW47JYid-dgpbGUzmFNUwACMbCXM58nws-WAa6S6WvfPnqiJENxG5SvfirzJDCw2jWsUZIDZjHSAJ9ppLi98joTx0uBY6LSfsqKMJJT9_5S24',
+                imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: AppColors.surfaceContainerHigh,
-                ),
+                errorBuilder: (_, __, ___) => Container(color: AppColors.surfaceContainerHigh),
               ),
             ),
           ),
@@ -299,28 +306,13 @@ class _SummaryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Phòng Suite Deluxe',
-                  style: AppTextStyles.bodyLg.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                Text(title, style: AppTextStyles.bodyLg.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.location_on_outlined,
-                        size: 14,
-                        color: AppColors.onSurfaceVariant),
+                    const Icon(Icons.location_on_outlined, size: 14, color: AppColors.onSurfaceVariant),
                     const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        'Villa Hội An Heritage',
-                        style: AppTextStyles.labelLg.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
+                    Expanded(child: Text(location, style: AppTextStyles.labelLg.copyWith(color: AppColors.onSurfaceVariant))),
                   ],
                 ),
               ],
@@ -336,34 +328,16 @@ class _CalendarSection extends StatelessWidget {
   final int month, year, nights;
   final DateTime? checkIn, checkOut;
   final void Function(int) onDayTap;
-  final bool Function(int) isInRange, isStart, isEnd;
+  final bool Function(int) isInRange, isStart, isEnd, isPast;
   final VoidCallback onPrevMonth, onNextMonth;
 
-  const _CalendarSection({
-    required this.month,
-    required this.year,
-    required this.checkIn,
-    required this.checkOut,
-    required this.onDayTap,
-    required this.isInRange,
-    required this.isStart,
-    required this.isEnd,
-    required this.onPrevMonth,
-    required this.onNextMonth,
-    required this.nights,
-  });
-
-  static const _monthNames = [
-    '', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4',
-    'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8',
-    'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
-  ];
-  static const _weekdays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+  const _CalendarSection({required this.month, required this.year, required this.checkIn, required this.checkOut, required this.onDayTap, required this.isInRange, required this.isStart, required this.isEnd, required this.isPast, required this.onPrevMonth, required this.onNextMonth, required this.nights});
 
   @override
   Widget build(BuildContext context) {
     final firstDay = DateTime(year, month, 1).weekday % 7;
     final daysInMonth = DateTime(year, month + 1, 0).day;
+    const monthNames = ['', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -371,112 +345,54 @@ class _CalendarSection extends StatelessWidget {
         color: AppColors.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(color: AppColors.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4)],
       ),
       child: Column(
         children: [
-          // Month navigation
           Row(
             children: [
-              Text(
-                '${_monthNames[month]}, $year',
-                style: AppTextStyles.titleLg.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              Text('${monthNames[month]}, $year', style: AppTextStyles.titleLg.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
               const Spacer(),
-              _CalNavBtn(
-                  icon: Icons.chevron_left, onTap: onPrevMonth),
+              _CalNavBtn(icon: Icons.chevron_left, onTap: onPrevMonth),
               const SizedBox(width: 4),
-              _CalNavBtn(
-                  icon: Icons.chevron_right, onTap: onNextMonth),
+              _CalNavBtn(icon: Icons.chevron_right, onTap: onNextMonth),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          // Weekday headers
-          Row(
-            children: _weekdays
-                .map((d) => Expanded(
-                      child: Text(
-                        d,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.labelMd.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                      ),
-                    ))
-                .toList(),
-          ),
+          Row(children: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((d) => Expanded(child: Text(d, textAlign: TextAlign.center, style: AppTextStyles.labelMd.copyWith(color: AppColors.onSurfaceVariant)))).toList()),
           const SizedBox(height: AppSpacing.sm),
-          // Days grid
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 7,
-              childAspectRatio: 1,
-            ),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7, childAspectRatio: 1),
             itemCount: firstDay + daysInMonth,
             itemBuilder: (context, i) {
               if (i < firstDay) return const SizedBox();
               final day = i - firstDay + 1;
+              final selected = isStart(day) || isEnd(day);
               final inRange = isInRange(day);
-              final start = isStart(day);
-              final end = isEnd(day);
-              final selected = start || end;
+              final past = isPast(day);
+              
               return GestureDetector(
-                onTap: () => onDayTap(day),
+                onTap: past ? null : () => onDayTap(day),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: inRange
-                        ? AppColors.primaryFixed
-                        : null,
-                    borderRadius: BorderRadius.only(
-                      topLeft: start
-                          ? const Radius.circular(AppRadius.full)
-                          : Radius.zero,
-                      bottomLeft: start
-                          ? const Radius.circular(AppRadius.full)
-                          : Radius.zero,
-                      topRight: end
-                          ? const Radius.circular(AppRadius.full)
-                          : Radius.zero,
-                      bottomRight: end
-                          ? const Radius.circular(AppRadius.full)
-                          : Radius.zero,
-                    ),
+                    color: inRange ? AppColors.primaryFixed : null,
+                    borderRadius: isStart(day) ? const BorderRadius.horizontal(left: Radius.circular(AppRadius.full)) : isEnd(day) ? const BorderRadius.horizontal(right: Radius.circular(AppRadius.full)) : null,
                   ),
                   child: Center(
                     child: Container(
                       width: 36,
                       height: 36,
-                      decoration: selected
-                          ? const BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                            )
-                          : null,
+                      decoration: selected ? const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle) : null,
                       child: Center(
                         child: Text(
-                          '$day',
+                          '$day', 
                           style: AppTextStyles.bodyMd.copyWith(
-                            color: selected
-                                ? Colors.white
-                                : inRange
-                                    ? AppColors.onPrimaryFixed
-                                    : AppColors.onSurface,
-                            fontWeight: selected
-                                ? FontWeight.w700
-                                : FontWeight.w400,
-                          ),
-                        ),
+                            color: past ? AppColors.outline : (selected ? Colors.white : (inRange ? AppColors.onPrimaryFixed : AppColors.onSurface)), 
+                            fontWeight: selected ? FontWeight.w700 : FontWeight.w400
+                          )
+                        )
                       ),
                     ),
                   ),
@@ -487,34 +403,14 @@ class _CalendarSection extends StatelessWidget {
           if (nights > 0) ...[
             const SizedBox(height: AppSpacing.md),
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainer,
-                borderRadius: BorderRadius.circular(AppRadius.xl),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      color: AppColors.primary, size: 18),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      '${checkIn!.day} Th${checkIn!.month} - ${checkOut!.day} Th${checkOut!.month}, $year',
-                      style: AppTextStyles.labelLg.copyWith(
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '$nights đêm',
-                    style: AppTextStyles.labelLg.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(color: AppColors.surfaceContainer, borderRadius: BorderRadius.circular(AppRadius.xl)),
+              child: Row(children: [
+                const Icon(Icons.calendar_today_outlined, color: AppColors.primary, size: 18),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(child: Text('${checkIn!.day} Th${checkIn!.month} - ${checkOut!.day} Th${checkOut!.month}, $year', style: AppTextStyles.labelLg)),
+                Text('$nights đêm', style: AppTextStyles.labelLg.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
+              ]),
             ),
           ],
         ],
@@ -527,155 +423,60 @@ class _CalNavBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   const _CalNavBtn({required this.icon, required this.onTap});
-
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: AppTouchTarget.minSize,
-        height: AppTouchTarget.minSize,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(AppRadius.full),
-        ),
-        child: Icon(icon, size: 22, color: AppColors.onSurface),
-      ),
-    );
+    return GestureDetector(onTap: onTap, child: Container(width: 40, height: 40, decoration: const BoxDecoration(color: AppColors.surfaceContainerHigh, shape: BoxShape.circle), child: Icon(icon, size: 22, color: AppColors.onSurface)));
   }
 }
 
 class _BillingSection extends StatelessWidget {
   final int nights;
-  final double roomPrice, serviceFee, promoDiscount, total;
+  final double roomPrice, serviceFee, tax, promoDiscount, total;
   final TextEditingController promoController;
   final bool isPromoApplied;
   final VoidCallback onApplyPromo;
   final String Function(double) formatVnd;
 
-  const _BillingSection({
-    required this.nights,
-    required this.roomPrice,
-    required this.serviceFee,
-    required this.promoDiscount,
-    required this.total,
-    required this.promoController,
-    required this.isPromoApplied,
-    required this.onApplyPromo,
-    required this.formatVnd,
-  });
+  const _BillingSection({required this.nights, required this.roomPrice, required this.serviceFee, required this.tax, required this.promoDiscount, required this.total, required this.promoController, required this.isPromoApplied, required this.onApplyPromo, required this.formatVnd});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Chi tiết thanh toán',
-          style: AppTextStyles.titleLg.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        Text('Chi tiết thanh toán', style: AppTextStyles.titleLg.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
         const SizedBox(height: AppSpacing.md),
-        _BillingRow(
-          label:
-              '${formatVnd(roomPrice)} x $nights đêm',
-          value: formatVnd(roomPrice * nights),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _BillingRow(
-            label: 'Phí dịch vụ',
-            value: formatVnd(serviceFee)),
-        if (isPromoApplied) ...[
-          const SizedBox(height: AppSpacing.sm),
-          _BillingRow(
-            label: 'Mã giảm giá',
-            value: '-${formatVnd(promoDiscount)}',
-            isDiscount: true,
-          ),
-        ],
+        _BillingRow(label: '${formatVnd(roomPrice)} x $nights đêm', value: formatVnd(roomPrice * nights)),
+        _BillingRow(label: 'Phí dịch vụ (5%)', value: formatVnd(serviceFee)),
+        _BillingRow(label: 'Thuế VAT (8%)', value: formatVnd(tax)),
+        if (isPromoApplied) _BillingRow(label: 'Mã giảm giá', value: '-${formatVnd(promoDiscount)}', isDiscount: true),
         const SizedBox(height: AppSpacing.md),
-        // Promo Code
         Row(
           children: [
             Expanded(
               child: TextField(
                 controller: promoController,
-                style: AppTextStyles.bodyMd,
                 decoration: InputDecoration(
                   hintText: 'Nhập mã ưu đãi',
-                  hintStyle: AppTextStyles.bodyMd
-                      .copyWith(color: AppColors.outline),
-                  border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppRadius.xl),
-                    borderSide: const BorderSide(
-                        color: AppColors.outlineVariant),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppRadius.xl),
-                    borderSide: const BorderSide(
-                        color: AppColors.outlineVariant),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppRadius.xl),
-                    borderSide: const BorderSide(
-                        color: AppColors.primary, width: 2),
-                  ),
-                  filled: true,
-                  fillColor: AppColors.surfaceContainerLowest,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
+                  filled: true, fillColor: AppColors.surfaceContainerLowest,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             GestureDetector(
               onTap: onApplyPromo,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryContainer,
-                  borderRadius:
-                      BorderRadius.circular(AppRadius.xl),
-                ),
-                child: Text(
-                  'Áp dụng',
-                  style: AppTextStyles.labelLg.copyWith(
-                    color: AppColors.onSecondaryContainer,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+              child: Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14), decoration: BoxDecoration(color: AppColors.secondaryContainer, borderRadius: BorderRadius.circular(AppRadius.xl)), child: Text('Áp dụng', style: AppTextStyles.labelLg.copyWith(color: AppColors.onSecondaryContainer, fontWeight: FontWeight.w700))),
             ),
           ],
         ),
-        const Divider(
-            height: 32,
-            color: AppColors.outlineVariant,
-            thickness: 0.5),
+        const Divider(height: 32),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              'Tổng thanh toán',
-              style: AppTextStyles.titleLg.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Text(
-              formatVnd(nights > 0 ? total : 0),
-              style: AppTextStyles.headlineLgMobile.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+            Text('Tổng thanh toán', style: AppTextStyles.titleLg.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
+            Text(formatVnd(nights > 0 ? total : 0.0), style: AppTextStyles.headlineLgMobile.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800)),
           ],
         ),
       ],
@@ -686,26 +487,18 @@ class _BillingSection extends StatelessWidget {
 class _BillingRow extends StatelessWidget {
   final String label, value;
   final bool isDiscount;
-  const _BillingRow(
-      {required this.label, required this.value, this.isDiscount = false});
-
+  const _BillingRow({required this.label, required this.value, this.isDiscount = false});
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label,
-            style: AppTextStyles.bodyMd
-                .copyWith(color: AppColors.onSurfaceVariant)),
-        Text(
-          value,
-          style: AppTextStyles.bodyMd.copyWith(
-            color: isDiscount
-                ? AppColors.onTertiaryContainer
-                : AppColors.onSurface,
-          ),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant)),
+          Text(value, style: AppTextStyles.bodyMd.copyWith(color: isDiscount ? AppColors.error : AppColors.onSurface)),
+        ],
+      ),
     );
   }
 }
@@ -713,165 +506,65 @@ class _BillingRow extends StatelessWidget {
 class _PaymentMethodSection extends StatelessWidget {
   final int selected;
   final void Function(int) onChanged;
-
-  const _PaymentMethodSection(
-      {required this.selected, required this.onChanged});
+  const _PaymentMethodSection({required this.selected, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     final methods = [
-      _PaymentMethod(
-          label: 'Ví điện tử MoMo',
-          icon: Icons.account_balance_wallet_outlined,
-          bgColor: const Color(0xFFFCE4EC),
-          iconColor: const Color(0xFFAD1457)),
-      _PaymentMethod(
-          label: 'Thẻ ngân hàng Nội địa',
-          icon: Icons.credit_card_outlined,
-          bgColor: const Color(0xFFE3F2FD),
-          iconColor: const Color(0xFF1565C0)),
-      _PaymentMethod(
-          label: 'Chuyển khoản QR',
-          icon: Icons.qr_code_2_outlined,
-          bgColor: const Color(0xFFE8F5E9),
-          iconColor: const Color(0xFF2E7D32)),
+      {'name': 'Ví điện tử MoMo', 'icon': Icons.account_balance_wallet_outlined, 'color': Color(0xFFAD1457), 'bg': Color(0xFFFCE4EC)},
+      {'name': 'Thẻ ngân hàng', 'icon': Icons.credit_card_outlined, 'color': Color(0xFF1565C0), 'bg': Color(0xFFE3F2FD)},
+      {'name': 'Chuyển khoản QR', 'icon': Icons.qr_code_2_outlined, 'color': Color(0xFF2E7D32), 'bg': Color(0xFFE8F5E9)},
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Phương thức thanh toán',
-          style: AppTextStyles.titleLg.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        Text('Phương thức thanh toán', style: AppTextStyles.titleLg.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
         const SizedBox(height: AppSpacing.md),
-        RadioGroup<int>(
-          groupValue: selected,
-          onChanged: (v) {
-            if (v != null) onChanged(v);
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: methods.asMap().entries.map((entry) {
-              final i = entry.key;
-              final m = entry.value;
-              final isSelected = selected == i;
-              return Padding(
-                padding:
-                    const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: GestureDetector(
-                  onTap: () => onChanged(i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppRadius.xl),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.outlineVariant,
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: m.bgColor,
-                            borderRadius:
-                                BorderRadius.circular(AppRadius.md),
-                          ),
-                          child: Icon(m.icon,
-                              color: m.iconColor, size: 22),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Text(
-                            m.label,
-                            style: AppTextStyles.bodyLg.copyWith(
-                              color: AppColors.onSurface,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        Radio<int>(
-                          value: i,
-                          activeColor: AppColors.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
+        ...List.generate(methods.length, (i) {
+          final isSelected = selected == i;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: GestureDetector(
+              onTap: () => onChanged(i),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(AppRadius.xl), border: Border.all(color: isSelected ? AppColors.primary : AppColors.outlineVariant, width: isSelected ? 2 : 1)),
+                child: Row(children: [
+                  Container(width: 40, height: 40, decoration: BoxDecoration(color: methods[i]['bg'] as Color, borderRadius: BorderRadius.circular(8)), child: Icon(methods[i]['icon'] as IconData, color: methods[i]['color'] as Color, size: 22)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(methods[i]['name'] as String, style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w500))),
+                  Radio<int>(value: i, groupValue: selected, onChanged: (v) => onChanged(v!), activeColor: AppColors.primary),
+                ]),
+              ),
+            ),
+          );
+        }),
       ],
     );
   }
 }
 
-class _PaymentMethod {
-  final String label;
-  final IconData icon;
-  final Color bgColor, iconColor;
-  const _PaymentMethod({
-    required this.label,
-    required this.icon,
-    required this.bgColor,
-    required this.iconColor,
-  });
-}
-
 class _BookingSuccessDialog extends StatelessWidget {
+  final String propertyName;
   final VoidCallback onClose;
-  const _BookingSuccessDialog({required this.onClose});
+  const _BookingSuccessDialog({required this.propertyName, required this.onClose});
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.card)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: const BoxDecoration(
-                color: AppColors.tertiaryFixed,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check,
-                  size: 40, color: AppColors.onTertiaryFixed),
-            ),
+            const Icon(Icons.check_circle, size: 72, color: AppColors.tertiary),
             const SizedBox(height: AppSpacing.md),
-            Text(
-              'Đặt phòng thành công!',
-              style: AppTextStyles.headlineLgMobile.copyWith(
-                color: AppColors.onSurface,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Chuyến đi của bạn tại Villa Hội An Heritage đã được xác nhận. Hẹn gặp bạn tại Hội An!',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            VibePrimaryButton(
-              label: 'Về trang chủ',
-              onPressed: onClose,
-            ),
+            Text('Đặt phòng thành công!', style: AppTextStyles.headlineLgMobile, textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            Text('Chuyến đi của bạn tại $propertyName đã được xác nhận.', textAlign: TextAlign.center, style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurfaceVariant)),
+            const SizedBox(height: 24),
+            VibePrimaryButton(label: 'Về trang chủ', onPressed: onClose),
           ],
         ),
       ),

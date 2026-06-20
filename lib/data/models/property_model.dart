@@ -1,5 +1,6 @@
 import '../../domain/entities/property_entity.dart';
 import '../datasources/mock_data.dart';
+import 'room_model.dart';
 
 class PropertyModel extends PropertyEntity {
   const PropertyModel({
@@ -14,6 +15,7 @@ class PropertyModel extends PropertyEntity {
     required super.imageUrls,
     required super.amenities,
     required super.description,
+    required super.rooms,
     required super.latitude,
     required super.longitude,
     required super.city,
@@ -33,6 +35,11 @@ class PropertyModel extends PropertyEntity {
       imageUrls: List<String>.from(json['imageUrls']),
       amenities: List<String>.from(json['amenities']),
       description: json['description'] as String,
+      rooms: json['rooms'] != null
+          ? (json['rooms'] as List)
+              .map((r) => RoomModel.fromJson(r as Map<String, dynamic>))
+              .toList()
+          : [],
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       city: json['city'] as String,
