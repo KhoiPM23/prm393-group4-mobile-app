@@ -4,6 +4,12 @@ import '../models/property_model.dart';
 
 class MockPropertyRepository implements PropertyRepository {
   @override
+  Future<List<PropertyEntity>> getProperties() async {
+    await Future.delayed(const Duration(milliseconds: 600));
+    return PropertyModel.mockList();
+  }
+
+  @override
   Future<List<PropertyEntity>> getFeaturedProperties() async {
     await Future.delayed(const Duration(milliseconds: 600));
     return PropertyModel.mockList();
