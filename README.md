@@ -5,6 +5,20 @@
 
 A new Flutter project.
 
+Ứng dụng đặt phòng Homestay cao cấp, hỗ trợ khám phá địa điểm qua bản đồ và tương tác thời gian thực với chủ nhà.
+
+## Tài liệu hướng dẫn (Team PRM393)
+- [Hướng dẫn phát triển (Git & Setup)](docs/DEVELOPMENT_GUIDE.md)
+- [Kiến trúc hệ thống](docs/ARCHITECTURE.md)
+
+## Tech Stack
+- Flutter 3.x
+- BLoC Pattern
+- Firebase (Auth, Firestore)
+
+## Quy trình làm việc
+Nhóm làm việc bất đồng bộ. Mọi thay đổi đều phải thông qua Pull Request vào nhánh `develop`.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

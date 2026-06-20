@@ -121,3 +121,6 @@ app.*.symbols
 *.ipr
 *.iws
 .idea/
+
+# Stitch UI Assets & Mockups
+/stitch_vibelocals_flutter_property_screen/
