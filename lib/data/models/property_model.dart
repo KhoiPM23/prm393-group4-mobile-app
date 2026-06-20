@@ -14,6 +14,10 @@ class PropertyModel extends PropertyEntity {
     required super.imageUrls,
     required super.amenities,
     required super.description,
+    required super.latitude,
+    required super.longitude,
+    required super.city,
+    required super.district,
   });
 
   factory PropertyModel.fromJson(Map<String, dynamic> json) {
@@ -29,10 +33,16 @@ class PropertyModel extends PropertyEntity {
       imageUrls: List<String>.from(json['imageUrls']),
       amenities: List<String>.from(json['amenities']),
       description: json['description'] as String,
+      latitude: (json['latitude'] as num).toDouble(),
+      longitude: (json['longitude'] as num).toDouble(),
+      city: json['city'] as String,
+      district: json['district'] as String,
     );
   }
 
   static List<PropertyModel> mockList() {
-    return MockData.getMockProperties().map((e) => PropertyModel.fromJson(e)).toList();
+    return MockData.getMockProperties()
+        .map((e) => PropertyModel.fromJson(e))
+        .toList();
   }
 }

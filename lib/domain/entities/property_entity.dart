@@ -11,6 +11,12 @@ class PropertyEntity {
   final List<String> amenities;
   final String description;
 
+  // ===== THÀNH PHẦN MỞ RỘNG CHO MODULE MAP =====
+  final double latitude; // Kinh độ để chấm ghim bản đồ
+  final double longitude; // Vĩ độ để chấm ghim bản đồ
+  final String city; // Thành phố (Mặc định: Đà Nẵng)
+  final String district; // Quận/Phường hỗ trợ bộ lọc thông minh
+
   const PropertyEntity({
     required this.id,
     required this.title,
@@ -23,5 +29,9 @@ class PropertyEntity {
     required this.imageUrls,
     required this.amenities,
     required this.description,
+    required this.latitude,
+    required this.longitude,
+    required this.city,
+    required this.district,
   });
 }
