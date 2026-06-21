@@ -542,7 +542,7 @@ class _PropertyPreviewCardAirbnb extends StatelessWidget {
                       text: TextSpan(children: [
                         TextSpan(
                             text:
-                                '${property.pricePerNight.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (m) => "${m[1]}.")}đ',
+                                'Từ ${property.pricePerNight.toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (m) => "${m[1]}.")}đ',
                             style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
