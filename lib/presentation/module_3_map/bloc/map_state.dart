@@ -1,3 +1,5 @@
+import 'package:latlong2/latlong.dart';
+
 import '../../../domain/entities/property_entity.dart';
 
 enum MapStatus { initial, loading, loaded, error }
@@ -19,6 +21,8 @@ class MapState {
   final List<String> selectedAmenities;
   final String? errorMessage;
 
+  final LatLng? userLocation;
+
   MapState({
     required this.status,
     required this.allProperties,
@@ -31,6 +35,7 @@ class MapState {
     this.maxPrice,
     required this.selectedAmenities,
     this.errorMessage,
+    this.userLocation,
   });
 
   factory MapState.initial() {
@@ -60,6 +65,7 @@ class MapState {
     double? Function()? maxPrice,
     List<String>? selectedAmenities,
     String? Function()? errorMessage,
+    LatLng? Function()? userLocation,
   }) {
     return MapState(
       status: status ?? this.status,
@@ -74,6 +80,7 @@ class MapState {
       maxPrice: maxPrice != null ? maxPrice() : this.maxPrice,
       selectedAmenities: selectedAmenities ?? this.selectedAmenities,
       errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,
+      userLocation: userLocation != null ? userLocation() : this.userLocation,
     );
   }
 }

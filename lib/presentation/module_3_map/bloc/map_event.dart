@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:latlong2/latlong.dart';
 
 @immutable
 abstract class MapEvent {}
@@ -51,4 +52,10 @@ class MapFilterApplied extends MapEvent {
 class MapMarkerSelected extends MapEvent {
   final String propertyId;
   MapMarkerSelected(this.propertyId);
+}
+
+// 7. Cập nhật tọa độ GPS thực tế của thiết bị người dùng
+class MapUserLocationUpdated extends MapEvent {
+  final LatLng location;
+  MapUserLocationUpdated(this.location);
 }
