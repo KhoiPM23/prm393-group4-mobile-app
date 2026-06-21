@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/mock_user_repository.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -17,8 +18,10 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _userRepository = MockUserRepository();
   bool _isLoading = false;
   bool _isSent = false;
+  String? _demoOtp;
 
   @override
   void dispose() {
@@ -29,12 +32,39 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _handleSendOtp() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1, milliseconds: 500));
-    if (!mounted) return;
-    setState(() {
-      _isLoading = false;
-      _isSent = true;
-    });
+    try {
+      final otp = await _userRepository.requestPasswordResetOtp(
+        _emailController.text,
+      );
+      if (!mounted) return;
+      setState(() {
+        _isSent = true;
+        _demoOtp = otp;
+      });
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      _showError(error.message);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppTextStyles.bodyMd.copyWith(color: Colors.white),
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+      ),
+    );
   }
 
   @override
@@ -168,8 +198,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                       if (v == null || v.isEmpty) {
                                         return 'Vui lòng nhập email';
                                       }
-                                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                                          .hasMatch(v)) {
+                                      if (!MockUserRepository.isValidEmail(v)) {
                                         return 'Email không hợp lệ';
                                       }
                                       return null;
@@ -177,7 +206,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   ),
                                   const SizedBox(height: AppSpacing.sm),
                                   Text(
-                                    'Chúng tôi sẽ gửi một liên kết an toàn tới hòm thư của bạn.',
+                                    'Chúng tôi sẽ gửi mã OTP tới hòm thư của bạn.',
                                     style: AppTextStyles.labelMd.copyWith(
                                       color: AppColors.outline,
                                     ),
@@ -220,17 +249,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
-                                    'Vui lòng kiểm tra hộp thư ${_emailController.text} và nhấn vào liên kết để đặt lại mật khẩu.',
+                                    'Vui lòng kiểm tra hộp thư ${_emailController.text} và lấy mã OTP để đổi mật khẩu.',
                                     style: AppTextStyles.bodyMd.copyWith(
                                       color: AppColors.onSurfaceVariant,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
+                                  if (_demoOtp != null) ...[
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'OTP mock để test: $_demoOtp',
+                                      style: AppTextStyles.labelMd.copyWith(
+                                        color: AppColors.outline,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
                                   const SizedBox(height: AppSpacing.md),
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.of(context).pushNamed(
-                                            '/reset-password'),
+                                            '/reset-password',
+                                            arguments:
+                                                _emailController.text.trim()),
                                     child: Text(
                                       'Đặt lại mật khẩu ngay',
                                       style: AppTextStyles.labelLg.copyWith(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/mock_user_repository.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -19,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _userRepository = MockUserRepository();
   bool _obscurePassword = true;
   bool _isLoading = false;
   late AnimationController _fadeController;
@@ -57,12 +59,37 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    // TODO: Navigate to HomeScreen on success
-    Navigator.of(context).pushReplacementNamed('/home');
+    try {
+      await _userRepository.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed('/home');
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      _showError(error.message);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppTextStyles.bodyMd.copyWith(color: Colors.white),
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+      ),
+    );
   }
 
   @override
@@ -172,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 if (v == null || v.isEmpty) {
                                   return 'Vui lòng nhập email';
                                 }
-                                if (!v.contains('@')) {
+                                if (!MockUserRepository.isValidEmail(v)) {
                                   return 'Email không hợp lệ';
                                 }
                                 return null;
@@ -200,8 +227,8 @@ class _LoginScreenState extends State<LoginScreen>
                                 if (v == null || v.isEmpty) {
                                   return 'Vui lòng nhập mật khẩu';
                                 }
-                                if (v.length < 6) {
-                                  return 'Mật khẩu ít nhất 6 ký tự';
+                                if (!MockUserRepository.isValidPassword(v)) {
+                                  return 'Mật khẩu ít nhất 8 ký tự và có 1 chữ cái';
                                 }
                                 return null;
                               },
