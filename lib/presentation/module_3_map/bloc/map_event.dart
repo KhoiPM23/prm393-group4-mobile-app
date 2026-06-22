@@ -39,11 +39,13 @@ class MapLocationChanged extends MapEvent {
 class MapFilterApplied extends MapEvent {
   final double? minPrice;
   final double? maxPrice;
+  final double? minRating;
   final List<String> selectedAmenities;
 
   MapFilterApplied({
     this.minPrice,
     this.maxPrice,
+    this.minRating,
     required this.selectedAmenities,
   });
 }

@@ -24,7 +24,11 @@ class MockData {
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
         'imageUrls': [
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuDGKDUoW-W3uCUJ5Nr8o_h2iDeoOmQG-HBG6Cza2CfXcC776xbMTRKcXtnCOsYm3PSlrfPdHaBdQGs0lL7_p8lWzAebRFojPb3-yb9BjkrTI-mPcF_L44OuHg07SG_nDo_Y2Jkdpe5YjTuMg_qIE-8TvgbshA48XBuAzk3hUVzlXumjw5XqlTpx_WPYPodWEZ2HzQJoonS1QWgLE6PmgGTlC_V_dH7eo78RNo4Ih53lC07CpGxv2WpqadRIpOADj4d1PJ6Nb8kzRlc'
+          'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
+          'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688',
+          'https://images.unsplash.com/photo-1493809842364-78817add7ffb',
+          'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2',
+          'https://images.unsplash.com/photo-1484154218962-a197022b5858',
         ],
         'amenities': ['Wifi', 'Bếp', 'Máy lạnh', 'Chỗ đậu xe', 'Hồ bơi'],
         'description':
@@ -65,7 +69,10 @@ class MockData {
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuBwozORqRy0O4Jg0TBxrG_D6N3cIOgy3QVCi5nqyUsrlCrldx4OJuoP7vcVwlRvyD1iY4DBw79n7YMUFxdMll8ADpkbvnWLG2hQFRoHyaix7uQttYYfeJG27-RsDGfpo3bFFpKikKR0HCMg2a8xSD9vg1BfEwCuGUxtMWsOWaoOKV2xaCAfAt1Gm_94HhQ7i6_NIaXirssgN6s4ww9LrGBpOkOsr7QvRpDWqcjyWJq6xCiifR8U9_9qJ9n2_jEoxxFF9lMgKz42wG0',
         'imageUrls': [
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuCJewgMQ2BQcmbNN7-SFroruTgmooTarzm4n18nQE3pLjP9IFFcI32NUL6q3QPcgV8honmToE63FNwVyYBzuylzlSML0C24eICnhcQGAVJieGfg4RVde6d_aTsMnuVExh_OSrsEcbW1PqV9xoUh5x3PTQ4zmGHJUMcnsu6SPZzoGVZOtE83zW0A3sk4WAPBjYoV-tVtvbPzWq8XGuRgQ4No3HSNUfsv13Fi-gcwqxfoJ3bIYT7uKXXy9PvYdy1KmJPAldZhPN_myiQ'
+          'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2',
+          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b',
+          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
+          'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
         ],
         'amenities': ['Hồ bơi', 'Ăn sáng', 'Máy lạnh', 'Sân vườn', 'Sát biển'],
         'description':
@@ -106,7 +113,9 @@ class MockData {
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
         'imageUrls': [
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuDGKDUoW-W3uCUJ5Nr8o_h2iDeoOmQG-HBG6Cza2CfXcC776xbMTRKcXtnCOsYm3PSlrfPdHaBdQGs0lL7_p8lWzAebRFojPb3-yb9BjkrTI-mPcF_L44OuHg07SG_nDo_Y2Jkdpe5YjTuMg_qIE-8TvgbshA48XBuAzk3hUVzlXumjw5XqlTpx_WPYPodWEZ2HzQJoonS1QWgLE6PmgGTlC_V_dH7eo78RNo4Ih53lC07CpGxv2WpqadRIpOADj4d1PJ6Nb8kzRlc'
+          'https://images.unsplash.com/photo-1449156001437-3a16c1dfbe2c',
+          'https://images.unsplash.com/photo-1510798831971-661eb04b3739',
+          'https://images.unsplash.com/photo-1521401830884-6c03c1c87ebb',
         ],
         'amenities': ['Wifi', 'Máy lạnh', 'Sân vườn'],
         'description':
@@ -138,7 +147,10 @@ class MockData {
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuBwozORqRy0O4Jg0TBxrG_D6N3cIOgy3QVCi5nqyUsrlCrldx4OJuoP7vcVwlRvyD1iY4DBw79n7YMUFxdMll8ADpkbvnWLG2hQFRoHyaix7uQttYYfeJG27-RsDGfpo3bFFpKikKR0HCMg2a8xSD9vg1BfEwCuGUxtMWsOWaoOKV2xaCAfAt1Gm_94HhQ7i6_NIaXirssgN6s4ww9LrGBpOkOsr7QvRpDWqcjyWJq6xCiifR8U9_9qJ9n2_jEoxxFF9lMgKz42wG0',
         'imageUrls': [
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuCJewgMQ2BQcmbNN7-SFroruTgmooTarzm4n18nQE3pLjP9IFFcI32NUL6q3QPcgV8honmToE63FNwVyYBzuylzlSML0C24eICnhcQGAVJieGfg4RVde6d_aTsMnuVExh_OSrsEcbW1PqV9xoUh5x3PTQ4zmGHJUMcnsu6SPZzoGVZOtE83zW0A3sk4WAPBjYoV-tVtvbPzWq8XGuRgQ4No3HSNUfsv13Fi-gcwqxfoJ3bIYT7uKXXy9PvYdy1KmJPAldZhPN_myiQ'
+          'https://images.unsplash.com/photo-1564013799919-ab600027ffc6',
+          'https://images.unsplash.com/photo-1598928506311-c55dd1b65e90',
+          'https://images.unsplash.com/photo-1584622650111-993a426fbf0a',
+          'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9',
         ],
         'amenities': ['Wifi', 'Máy giặt', 'Máy lạnh', 'View sông Hàn', 'Gym'],
         'description':
