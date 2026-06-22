@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/theme/app_theme.dart';
+import 'data/repositories/mock_property_repository.dart';
 import 'presentation/module_1_auth/forgot_password_screen.dart';
 // Auth screens
 import 'presentation/module_1_auth/login_screen.dart';
@@ -9,6 +11,7 @@ import 'presentation/module_1_auth/register_screen.dart';
 import 'presentation/module_1_auth/reset_password_screen.dart';
 // Explore screens
 import 'presentation/module_2_explore/home_screen.dart';
+import 'presentation/module_3_map/bloc/map_bloc.dart';
 // Map screens
 import 'presentation/module_3_map/explore_map_screen.dart';
 import 'presentation/module_4_booking/booking_confirm_screen.dart';
@@ -60,7 +63,12 @@ class VibeLocalsApp extends StatelessWidget {
 
         // ===== MAIN APP FLOW =====
         '/home': (context) => const HomeScreen(),
-        '/explore': (context) => const ExploreMapScreen(),
+        '/explore': (context) => BlocProvider(
+              create: (context) => MapBloc(
+                propertyRepository: MockPropertyRepository(),
+              ),
+              child: const ExploreMapScreen(),
+            ),
 
         // ===== BOOKING FLOW =====
         '/property-detail': (context) => const PropertyDetailScreen(),
