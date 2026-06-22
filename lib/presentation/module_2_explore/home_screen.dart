@@ -9,6 +9,7 @@ import '../blocs/home/home_bloc.dart';
 import '../blocs/home/home_event.dart';
 import '../blocs/home/home_state.dart';
 import '../../data/repositories/mock_property_repository.dart';
+import 'search_screen.dart';
 
 /// Màn hình Trang chủ VibeLocals
 /// Route: /home
@@ -70,7 +71,9 @@ class _HomeScreenState extends State<HomeScreen> {
       create: (context) => HomeBloc(
         propertyRepository: MockPropertyRepository(),
       )..add(FetchProperties()),
-      child: Scaffold(
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
         backgroundColor: AppColors.background,
       body: Stack(
         children: [
@@ -85,7 +88,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
                       AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
-                  child: _SearchBar(controller: _searchController),
+                  child: _SearchBar(
+                    controller: _searchController,
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const SearchScreen(),
+                      ));
+                    },
+                    onSubmitted: (query) {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => SearchScreen(initialQuery: query),
+                      ));
+                    },
+                    onFilterTap: () {
+                      // Navigate to search screen then user can filter there
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const SearchScreen(),
+                      ));
+                    },
+                  ),
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
@@ -104,8 +125,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       final cat = _categories[i];
                       final isActive = _selectedCategory == i;
                       return GestureDetector(
-                        onTap: () =>
-                            setState(() => _selectedCategory = i),
+                        onTap: () {
+                          if (_selectedCategory == i) return;
+                          setState(() => _selectedCategory = i);
+                          context.read<HomeBloc>().add(FetchPropertiesByCategory(cat.label));
+                        },
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -219,7 +243,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-    ),
+    );
+        }
+      ),
     );
   }
 }
@@ -310,8 +336,16 @@ class _GlassTopBar extends StatelessWidget {
 
 class _SearchBar extends StatelessWidget {
   final TextEditingController controller;
+  final VoidCallback? onFilterTap;
+  final ValueChanged<String>? onSubmitted;
+  final VoidCallback? onTap;
 
-  const _SearchBar({required this.controller});
+  const _SearchBar({
+    required this.controller,
+    this.onFilterTap,
+    this.onSubmitted,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -337,22 +371,29 @@ class _SearchBar extends StatelessWidget {
             child: Icon(Icons.search, color: AppColors.onSurfaceVariant),
           ),
           Expanded(
-            child: TextField(
-              controller: controller,
-              style: AppTextStyles.bodyMd
-                  .copyWith(color: AppColors.onSurface),
-              decoration: InputDecoration(
-                hintText: 'Tìm kiếm điểm đến...',
-                hintStyle: AppTextStyles.bodyMd
-                    .copyWith(color: AppColors.outline),
-                border: InputBorder.none,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12),
+            child: GestureDetector(
+              onTap: onTap,
+              child: AbsorbPointer(
+                absorbing: onTap != null,
+                child: TextField(
+                  controller: controller,
+                  onSubmitted: onSubmitted,
+                  style: AppTextStyles.bodyMd
+                      .copyWith(color: AppColors.onSurface),
+                  decoration: InputDecoration(
+                    hintText: 'Tìm kiếm điểm đến...',
+                    hintStyle: AppTextStyles.bodyMd
+                        .copyWith(color: AppColors.outline),
+                    border: InputBorder.none,
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12),
+                  ),
+                ),
               ),
             ),
           ),
           GestureDetector(
-            onTap: () {},
+            onTap: onFilterTap,
             child: Container(
               width: 44,
               height: 44,

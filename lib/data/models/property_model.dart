@@ -16,6 +16,7 @@ class PropertyModel extends PropertyEntity {
     required super.amenities,
     required super.description,
     required super.rooms,
+    required super.categories,
     required super.latitude,
     required super.longitude,
     required super.city,
@@ -40,6 +41,7 @@ class PropertyModel extends PropertyEntity {
               .map((r) => RoomModel.fromJson(r as Map<String, dynamic>))
               .toList()
           : [],
+      categories: json['categories'] != null ? List<String>.from(json['categories']) : [],
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       city: json['city'] as String,

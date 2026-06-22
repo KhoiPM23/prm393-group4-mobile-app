@@ -30,6 +30,7 @@ class MockData {
         'amenities': ['Wifi', 'Bếp', 'Máy lạnh', 'Chỗ đậu xe', 'Hồ bơi'],
         'description':
             'Căn hộ cao cấp tọa lạc ngay trung tâm quận Hải Châu, view trọn sông Hàn thơ mộng. Đầy đủ tiện nghi chuẩn thượng lưu.',
+        'categories': ['Xu hướng'],
         'latitude': 16.0665, // Tọa độ thực Hải Châu
         'longitude': 108.2215,
         'city': 'Đà Nẵng',
@@ -71,6 +72,7 @@ class MockData {
         'amenities': ['Hồ bơi', 'Ăn sáng', 'Máy lạnh', 'Sân vườn', 'Sát biển'],
         'description':
             'Trải nghiệm không gian nghỉ dưỡng tuyệt hảo ngay sát bờ biển Mỹ Khê, quận Ngũ Hành Sơn.',
+        'categories': ['Gần biển', 'Xu hướng'],
         'latitude': 16.0352, // Tọa độ thực Ngũ Hành Sơn (gần Resort)
         'longitude': 108.2483,
         'city': 'Đà Nẵng',
@@ -112,6 +114,7 @@ class MockData {
         'amenities': ['Wifi', 'Máy lạnh', 'Sân vườn'],
         'description':
             'Homestay ẩn mình giữa thiên nhiên hoang sơ của bán đảo Sơn Trà, thích hợp cho việc chữa lành và trốn khói bụi đô thị.',
+        'categories': ['Vùng núi', 'Độc đáo'],
         'latitude': 16.0982, // Tọa độ thực khu Sơn Trà
         'longitude': 108.2614,
         'city': 'Đà Nẵng',
@@ -144,6 +147,7 @@ class MockData {
         'amenities': ['Wifi', 'Máy giặt', 'Máy lạnh', 'View sông Hàn', 'Gym'],
         'description':
             'Studio hiện đại nằm sát đường Bạch Đằng, tầm nhìn panorama ngắm trọn vẹn cầu Rồng và sông Hàn thơ mộng.',
+        'categories': ['Xu hướng', 'Độc đáo'],
         'latitude': 16.0757, // Khu vực đường Bạch Đằng, Hải Châu
         'longitude': 108.2238,
         'city': 'Đà Nẵng',
@@ -182,6 +186,7 @@ class MockData {
         ],
         'description':
             'Khách sạn phong cách Boutique trẻ trung nằm trên đường Võ Nguyên Giáp, đối diện bãi tắm Phạm Văn Đồng sầm uất.',
+        'categories': ['Gần biển', 'Xu hướng'],
         'latitude': 16.0622, // Khu vực Võ Nguyên Giáp, Sơn Trà
         'longitude': 108.2461,
         'city': 'Đà Nẵng',
@@ -220,6 +225,7 @@ class MockData {
         ],
         'description':
             'Căn hộ dịch vụ ấm cúng nằm ngay trung tâm khu phố Tây An Thượng, cách biển Mỹ Khê chỉ 3 phút đi bộ.',
+        'categories': ['Gần biển'],
         'latitude': 16.0505, // Khu phố du lịch An Thượng, Ngũ Hành Sơn
         'longitude': 108.2445,
         'city': 'Đà Nẵng',
@@ -258,6 +264,7 @@ class MockData {
         ],
         'description':
             'Nhà nguyên căn tọa lạc trên đường Trần Hưng Đạo, vị trí đắc địa để ngắm Cầu Rồng phun lửa và nước vào cuối tuần.',
+        'categories': ['Độc đáo', 'Di sản'],
         'latitude': 16.0682, // Đường Trần Hưng Đạo sát Sông Hàn, Sơn Trà
         'longitude': 108.2325,
         'city': 'Đà Nẵng',
@@ -296,6 +303,7 @@ class MockData {
         ],
         'description':
             'Biệt thự sinh thái yên tĩnh tại khu đô thị Hòa Xuân, không gian rộng rãi thoáng đãng phù hợp cho gia đình nghỉ dưỡng.',
+        'categories': ['Xu hướng'],
         'latitude': 16.0125, // Khu đô thị đảo sinh thái Hòa Xuân, Cẩm Lệ
         'longitude': 108.2204,
         'city': 'Đà Nẵng',
