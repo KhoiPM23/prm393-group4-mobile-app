@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -114,14 +116,11 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
   }
 
   Future<void> _launchGoogleMapsNavigation(double lat, double lng) async {
-    final url = 'google.navigation:q=$lat,$lng';
+    // Sử dụng URL web với parameters /dir/ để yêu cầu vẽ đường (không tự động bắt đầu chế độ lái xe)
+    final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      final webUrl =
-          'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
-      await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
     }
   }
 
@@ -140,6 +139,52 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
         maxLat: bounds.northEast.latitude,
         minLng: bounds.southWest.longitude,
         maxLng: bounds.northEast.longitude));
+  }
+
+  Widget _buildQuickFilterChip({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.black : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isActive ? Colors.black : Colors.grey.shade300,
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isActive ? 0.2 : 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 16, color: isActive ? Colors.white : Colors.black87),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isActive ? Colors.white : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _pickDateRange() async {
@@ -181,31 +226,52 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       resizeToAvoidBottomInset: false,
-      body: BlocListener<MapBloc, MapState>(
-        listenWhen: (previous, current) =>
-            previous.selectedProperty != current.selectedProperty,
-        listener: (context, state) {
-          if (state.selectedProperty != null) {
-            // FIX TRIỆT ĐỂ: Bọc animateTo vào addPostFrameCallback để ép hệ thống đợi bản đồ ổn định layout rồi mới phóng cao tấm trượt, giải quyết lỗi kẹt ở vị trí thấp
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _sheetController.animateTo(
-                  0.55, // Nâng sải không gian lên mốc 0.55 để lộ hoàn toàn phần thành tiền
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic);
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<MapBloc, MapState>(
+            listenWhen: (previous, current) =>
+                previous.selectedProperty != current.selectedProperty,
+            listener: (context, state) {
+              if (state.selectedProperty != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _sheetController.animateTo(0.55,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic);
 
-              _animatedMapMove(
-                  LatLng(state.selectedProperty!.latitude,
-                      state.selectedProperty!.longitude),
-                  15.5);
-            });
-          } else {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _sheetController.animateTo(0.45,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic);
-            });
-          }
-        },
+                  _animatedMapMove(
+                      LatLng(state.selectedProperty!.latitude,
+                          state.selectedProperty!.longitude),
+                      15.5);
+                });
+              } else {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _sheetController.animateTo(0.06,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic);
+                });
+              }
+            },
+          ),
+          BlocListener<MapBloc, MapState>(
+            listenWhen: (previous, current) =>
+                previous.searchQuery != current.searchQuery &&
+                current.searchQuery.isNotEmpty,
+            listener: (context, state) {
+              if (state.allProperties.isNotEmpty) {
+                double sumLat = 0;
+                double sumLng = 0;
+                for (var p in state.allProperties) {
+                  sumLat += p.latitude;
+                  sumLng += p.longitude;
+                }
+                final center = LatLng(sumLat / state.allProperties.length,
+                    sumLng / state.allProperties.length);
+                _animatedMapMove(
+                    center, 13.0); // Tự động bay tới vùng có kết quả
+              }
+            },
+          ),
+        ],
         child: BlocBuilder<MapBloc, MapState>(
           builder: (context, state) {
             final isSelected = state.selectedProperty != null;
@@ -245,25 +311,11 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                           markers: [
                             Marker(
                               point: state.userLocation!,
-                              width: 24,
-                              height: 24,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.blue.withValues(alpha: 0.25),
-                                    shape: BoxShape.circle),
-                                child: Center(
-                                  child: Container(
-                                    width: 14,
-                                    height: 14,
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                            color: Colors.white, width: 2)),
-                                  ),
-                                ),
-                              ),
-                            )
+                              width: 36, // tăng từ 24 → 36
+                              height: 36, // tăng từ 24 → 36
+                              child:
+                                  const _UserLocationBeacon(), // ← chỉ đổi dòng này
+                            ),
                           ],
                         ),
                       MarkerLayer(
@@ -293,66 +345,269 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                   ),
                 ),
 
-                // 2. THANH KIỂM SOÁT TÌM KIẾM & CHỌN NGÀY
+                // 1.5 BACKDROP BLUR KHI TÌM KIẾM
+                Positioned.fill(
+                  child: AnimatedBuilder(
+                    animation: _searchFocusNode,
+                    builder: (context, child) {
+                      if (!_searchFocusNode.hasFocus) {
+                        return const SizedBox.shrink();
+                      }
+                      return BackdropFilter(
+                        filter: ui.ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                        child: Container(
+                            color: Colors.black.withValues(alpha: 0.25)),
+                      );
+                    },
+                  ),
+                ),
+
+                // 2. THANH KIỂM SOÁT TÌM KIẾM & CHỌN NGÀY (GLASSMORPHISM)
                 Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _FloatingSearchBar(
-                            focusNode: _searchFocusNode,
-                            onBackTap: () {
-                              _searchFocusNode.unfocus();
-                              Navigator.of(context).pop();
-                            },
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 16.0, sigmaY: 16.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.70),
+                          border: Border(
+                            bottom: BorderSide(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                width: 1),
                           ),
-                          const SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: _pickDateRange,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.08),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2))
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.calendar_month,
-                                      size: 16, color: Colors.grey.shade700),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    _selectedDateRange == null
-                                        ? 'Chọn ngày dự kiến'
-                                        : '${_selectedDateRange!.start.day}/${_selectedDateRange!.start.month} - ${_selectedDateRange!.end.day}/${_selectedDateRange!.end.month}',
-                                    style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF333333)),
+                        ),
+                        child: SafeArea(
+                          bottom: false,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(AppSpacing.md,
+                                AppSpacing.md, AppSpacing.md, 12),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _FloatingSearchBar(
+                                  focusNode: _searchFocusNode,
+                                  onBackTap: () {
+                                    _searchFocusNode.unfocus();
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                const SizedBox(height: 8),
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  clipBehavior: Clip.none,
+                                  child: Row(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: _pickDateRange,
+                                        child: AnimatedContainer(
+                                          duration:
+                                              const Duration(milliseconds: 250),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: _selectedDateRange != null
+                                                ? null
+                                                : Colors.white,
+                                            gradient: _selectedDateRange != null
+                                                ? const LinearGradient(
+                                                    colors: [
+                                                      AppColors
+                                                          .secondaryContainer,
+                                                      AppColors.secondaryFixed,
+                                                    ],
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                  )
+                                                : null,
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            border: Border.all(
+                                              color: _selectedDateRange != null
+                                                  ? AppColors.secondary
+                                                      .withValues(alpha: 0.6)
+                                                  : Colors.transparent,
+                                              width: 1,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: _selectedDateRange !=
+                                                        null
+                                                    ? AppColors.secondary
+                                                        .withValues(alpha: 0.20)
+                                                    : Colors.black.withValues(
+                                                        alpha: 0.08),
+                                                blurRadius:
+                                                    _selectedDateRange != null
+                                                        ? 12
+                                                        : 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              AnimatedSwitcher(
+                                                duration: const Duration(
+                                                    milliseconds: 200),
+                                                child: Icon(
+                                                  _selectedDateRange != null
+                                                      ? Icons.calendar_today
+                                                      : Icons.calendar_month,
+                                                  key: ValueKey(
+                                                      _selectedDateRange !=
+                                                          null),
+                                                  size: 16,
+                                                  color: _selectedDateRange !=
+                                                          null
+                                                      ? AppColors
+                                                          .onSecondaryContainer
+                                                      : Colors.grey.shade700,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                _selectedDateRange == null
+                                                    ? 'Chọn ngày dự kiến'
+                                                    : '${_selectedDateRange!.start.day}/${_selectedDateRange!.start.month} - ${_selectedDateRange!.end.day}/${_selectedDateRange!.end.month}',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: _selectedDateRange !=
+                                                          null
+                                                      ? AppColors
+                                                          .onSecondaryContainer
+                                                      : AppColors.onSurface,
+                                                ),
+                                              ),
+                                              if (_selectedDateRange !=
+                                                  null) ...[
+                                                const SizedBox(width: 6),
+                                                GestureDetector(
+                                                  onTap: () => setState(() =>
+                                                      _selectedDateRange =
+                                                          null),
+                                                  child: Icon(
+                                                      Icons.close_rounded,
+                                                      size: 14,
+                                                      color: AppColors
+                                                          .onSecondaryContainer
+                                                          .withValues(
+                                                              alpha: 0.7)),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildQuickFilterChip(
+                                        icon: Icons.my_location,
+                                        label: 'Gần tôi',
+                                        isActive: state.userLocation != null,
+                                        onTap: () async {
+                                          await _requestAndGetUserLocation();
+                                          if (state.userLocation != null) {
+                                            _animatedMapMove(
+                                                state.userLocation!, 15.5);
+                                          }
+                                        },
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildQuickFilterChip(
+                                        icon: Icons.diamond,
+                                        label: 'Siêu cấp',
+                                        isActive: state.minRating != null &&
+                                            state.minRating! >= 4.5,
+                                        onTap: () {
+                                          final current =
+                                              context.read<MapBloc>().state;
+                                          final isAlreadySuper =
+                                              current.minRating != null &&
+                                                  current.minRating! >= 4.5;
+                                          context
+                                              .read<MapBloc>()
+                                              .add(MapFilterApplied(
+                                                minPrice: current.minPrice,
+                                                maxPrice: current.maxPrice,
+                                                minRating:
+                                                    isAlreadySuper ? null : 4.5,
+                                                selectedAmenities:
+                                                    current.selectedAmenities,
+                                              ));
+                                        },
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildQuickFilterChip(
+                                        icon: Icons.pool,
+                                        label: 'Hồ bơi',
+                                        isActive: state.selectedAmenities
+                                            .contains('Hồ bơi'),
+                                        onTap: () {
+                                          final current =
+                                              context.read<MapBloc>().state;
+                                          final amens = List<String>.from(
+                                              current.selectedAmenities);
+                                          if (amens.contains('Hồ bơi')) {
+                                            amens.remove('Hồ bơi');
+                                          } else {
+                                            amens.add('Hồ bơi');
+                                          }
+                                          context
+                                              .read<MapBloc>()
+                                              .add(MapFilterApplied(
+                                                minPrice: current.minPrice,
+                                                maxPrice: current.maxPrice,
+                                                minRating: current.minRating,
+                                                selectedAmenities: amens,
+                                              ));
+                                        },
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
+
+                // 2.5 FLOATING MAP CONTROLS (My Location / Zoom)
+                if (_sheetExtent < 0.8)
+                  Positioned(
+                    right: 16,
+                    bottom:
+                        MediaQuery.of(context).size.height * _sheetExtent + 16,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FloatingActionButton.small(
+                          heroTag: 'my_location',
+                          backgroundColor: Colors.white,
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          onPressed: () {
+                            if (state.userLocation != null) {
+                              _animatedMapMove(state.userLocation!, 15.5);
+                            } else {
+                              _requestAndGetUserLocation();
+                            }
+                          },
+                          child: const Icon(Icons.my_location,
+                              color: Colors.black87),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  const SizedBox.shrink(),
 
                 // 3. CONTAINER TẤM TRƯỢT THÍCH ỨNG CHẾ ĐỘ HIỂN THỊ ĐỘC QUYỀN
                 Positioned.fill(
@@ -369,22 +624,17 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                     },
                     child: DraggableScrollableSheet(
                       controller: _sheetController,
-                      // CHÍNH XÁC: Ánh xạ mốc chiều cao 0.55 đồng bộ vào cấu hình hệ thống tấm nền trượt
-                      initialChildSize: isSelected ? 0.55 : 0.45,
-                      minChildSize: isSelected ? 0.10 : 0.08,
-                      maxChildSize: isSelected ? 0.55 : 0.95,
+                      // Cải tiến: Mốc chiều cao 0.45 để ôm đủ trọn vẹn mọi thứ, không bị mất nút
+                      initialChildSize: isSelected ? 0.47 : 0.35,
+                      minChildSize:
+                          0.10, // Giữ min 0.10 cho danh sách, nhưng isSelected sẽ tự dismiss nếu dưới 0.18
+                      maxChildSize: isSelected ? 0.47 : 0.88,
                       snap: true,
                       snapSizes: isSelected
-                          ? const [
-                              0.10,
-                              0.55
-                            ] // Khóa cứng mốc 0.55 cao ráo hiển thị siêu đẹp, không lo bị lấp giá tiền
-                          : const [0.08, 0.45, 0.95],
+                          ? const [0.10, 0.47]
+                          : const [0.10, 0.35, 0.88],
                       builder: (context, scrollController) {
                         return Container(
-                          margin: isSelected
-                              ? const EdgeInsets.symmetric(horizontal: 16)
-                              : EdgeInsets.zero,
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? Colors.transparent
@@ -401,250 +651,211 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                         offset: const Offset(0, -4))
                                   ],
                           ),
-                          child: isSelected
-                              ? Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(24),
-                                    boxShadow: [
-                                      BoxShadow(
-                                          color: Colors.black
-                                              .withValues(alpha: 0.15),
-                                          blurRadius: 16,
-                                          offset: const Offset(0, 4))
+                          // Sử dụng ListView duy nhất bao trọn tất cả, từ Header đến các Item.
+                          // Điều này giúp toàn bộ vùng cửa sổ (kể cả Header) đều nhận diện thao tác kéo (Drag) mượt mà!
+                          child: ListView.builder(
+                            controller: scrollController,
+                            padding: EdgeInsets.zero,
+                            itemCount: isSelected
+                                ? 2 // Detail: Header Handle + PropertyPreviewCard
+                                : (state.status == MapStatus.loading
+                                    ? 5 // List: Header + 4 Skeletons
+                                    : displayList.length +
+                                        1), // List: Header + Properties
+                            itemBuilder: (context, index) {
+                              // INDEX 0: LUÔN LÀ HEADER HANDLE (Áp dụng chung cho cả 2 chế độ)
+                              if (index == 0) {
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      width: 40,
+                                      height: 5,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade300,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    if (!isSelected) ...[
+                                      Text(
+                                        'Tìm thấy ${displayList.length} chỗ ở trong vùng này',
+                                        style: AppTextStyles.labelLg.copyWith(
+                                          color: AppColors.onSurface,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
                                     ],
+                                    const SizedBox(height: 12),
+                                  ],
+                                );
+                              }
+
+                              // XỬ LÝ CHẾ ĐỘ MỘT ĐỊA ĐIỂM (DETAIL)
+                              if (isSelected) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: _PropertyPreviewCard(
+                                    property: state.selectedProperty!,
+                                    distance: _calculateDistance(
+                                      LatLng(state.selectedProperty!.latitude,
+                                          state.selectedProperty!.longitude),
+                                      state.userLocation,
+                                    ),
+                                    actionButton: ElevatedButton.icon(
+                                      onPressed: () =>
+                                          _launchGoogleMapsNavigation(
+                                              state.selectedProperty!.latitude,
+                                              state
+                                                  .selectedProperty!.longitude),
+                                      icon: const Icon(Icons.directions,
+                                          color: Colors.white, size: 16),
+                                      label: const Text('Dẫn đường',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13)),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.tertiary,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8)),
+                                        minimumSize: const Size(105, 38),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10),
+                                      ),
+                                    ),
+                                    secondaryActionButton: OutlinedButton(
+                                      onPressed: () => Navigator.of(context)
+                                          .pushNamed('/property-detail',
+                                              arguments:
+                                                  state.selectedProperty),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: AppColors.primary,
+                                        side: const BorderSide(
+                                            color: AppColors.primary),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8)),
+                                        minimumSize: const Size(85, 38),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10),
+                                      ),
+                                      child: const Text('Chi tiết',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13)),
+                                    ),
                                   ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                          width: 40,
-                                          height: 5,
-                                          decoration: BoxDecoration(
-                                              color: Colors.grey.shade300,
-                                              borderRadius:
-                                                  BorderRadius.circular(10))),
-                                      const SizedBox(height: 16),
-                                      Expanded(
-                                        child: ListView(
-                                          controller: scrollController,
-                                          padding: EdgeInsets.zero,
-                                          physics:
-                                              const ClampingScrollPhysics(),
-                                          children: [
-                                            _PropertyPreviewCard(
-                                              property: state.selectedProperty!,
-                                              distance: _calculateDistance(
-                                                  LatLng(
-                                                      state.selectedProperty!
-                                                          .latitude,
-                                                      state.selectedProperty!
-                                                          .longitude),
-                                                  state.userLocation),
-                                              // Cấu hình cặp nút đôi cân đối chống tràn viền
-                                              actionButton: ElevatedButton.icon(
-                                                onPressed: () =>
-                                                    _launchGoogleMapsNavigation(
-                                                        state.selectedProperty!
-                                                            .latitude,
-                                                        state.selectedProperty!
-                                                            .longitude),
-                                                icon: const Icon(
-                                                    Icons.directions,
-                                                    color: Colors.white,
-                                                    size: 16),
-                                                label: const Text('Dẫn đường',
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 13)),
-                                                style: ElevatedButton.styleFrom(
-                                                    backgroundColor: AppColors
-                                                        .tertiary,
-                                                    foregroundColor: Colors
-                                                        .white,
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        8)),
-                                                    minimumSize:
-                                                        const Size(105, 38),
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 10)),
-                                              ),
-                                              secondaryActionButton:
-                                                  OutlinedButton(
-                                                onPressed: () =>
-                                                    Navigator.of(context)
-                                                        .pushNamed(
-                                                  '/property-detail',
-                                                  arguments:
-                                                      state.selectedProperty,
-                                                ),
-                                                style: OutlinedButton.styleFrom(
-                                                  foregroundColor:
-                                                      AppColors.primary,
-                                                  side: const BorderSide(
-                                                      color: AppColors.primary),
-                                                  shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              8)),
-                                                  minimumSize:
-                                                      const Size(85, 38),
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 10),
-                                                ),
-                                                child: const Text('Chi tiết',
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 13)),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                );
+                              }
+
+                              // XỬ LÝ CHẾ ĐỘ DANH SÁCH (LIST)
+                              // Nếu cửa sổ đang thu gọn ở mức mép dưới (< 0.11), KHÔNG render các item bên dưới Header
+                              if (_sheetExtent <= 0.11)
+                                return const SizedBox.shrink();
+
+                              if (state.status == MapStatus.loading) {
+                                // Trả về từng Skeleton Item
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                      bottom: AppSpacing.md,
+                                      left: AppSpacing.md,
+                                      right: AppSpacing.md),
+                                  child: TweenAnimationBuilder<double>(
+                                    tween: Tween(begin: 0.0, end: 1.0),
+                                    duration:
+                                        const Duration(milliseconds: 1000),
+                                    curve: Curves.easeInOutSine,
+                                    builder: (context, value, child) {
+                                      final opacity =
+                                          (math.sin(value * 3.14)).abs() * 0.5 +
+                                              0.5;
+                                      return Opacity(
+                                          opacity: opacity, child: child);
+                                    },
+                                    child: Container(
+                                      height: 280,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                )
-                              : Container(
-                                  color: Colors.white,
-                                  child: Column(
-                                    children: [
-                                      GestureDetector(
-                                        behavior: HitTestBehavior.opaque,
-                                        onVerticalDragUpdate: (details) {
-                                          if (_sheetController.isAttached) {
-                                            final double delta =
-                                                details.primaryDelta! /
-                                                    MediaQuery.of(context)
-                                                        .size
-                                                        .height;
-                                            final double newSize =
-                                                (_sheetController.size - delta)
-                                                    .clamp(0.08, 0.95);
-                                            _sheetController.jumpTo(newSize);
-                                          }
-                                        },
-                                        onVerticalDragEnd: (details) {
-                                          if (_sheetController.isAttached) {
-                                            final List<double> snaps = [
-                                              0.08,
-                                              0.45,
-                                              0.95
-                                            ];
-                                            final double currentSize =
-                                                _sheetController.size;
-                                            double closestSnap = snaps.first;
-                                            double minDelta =
-                                                (currentSize - closestSnap)
-                                                    .abs();
-                                            for (final snap in snaps) {
-                                              final d =
-                                                  (currentSize - snap).abs();
-                                              if (d < minDelta) {
-                                                minDelta = d;
-                                                closestSnap = snap;
-                                              }
-                                            }
-                                            _sheetController.animateTo(
-                                                closestSnap,
-                                                duration: const Duration(
-                                                    milliseconds: 150),
-                                                curve: Curves.easeOutCubic);
-                                          }
-                                        },
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const SizedBox(height: 12),
-                                            Container(
-                                                width: 40,
-                                                height: 5,
-                                                decoration: BoxDecoration(
-                                                    color: Colors.grey.shade300,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10))),
-                                            const SizedBox(height: 12),
-                                            Text(
-                                                'Tìm thấy ${displayList.length} chỗ ở trong vùng này',
-                                                style: AppTextStyles.labelLg
-                                                    .copyWith(
-                                                        color:
-                                                            AppColors.onSurface,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 15)),
-                                            const SizedBox(height: 12),
-                                          ],
+                                );
+                              }
+
+                              // Trả về từng Property Item
+                              final property = displayList[index - 1];
+                              return Padding(
+                                padding: const EdgeInsets.only(
+                                    bottom: AppSpacing.md,
+                                    left: AppSpacing.md,
+                                    right: AppSpacing.md),
+                                child: TweenAnimationBuilder<double>(
+                                  tween: Tween(begin: 0.0, end: 1.0),
+                                  duration: Duration(
+                                      milliseconds: 300 +
+                                          ((index - 1) * 50)
+                                              .clamp(0, 400)
+                                              .toInt()),
+                                  curve: Curves.easeOutCubic,
+                                  builder: (context, value, child) {
+                                    return Opacity(
+                                      opacity: value,
+                                      child: Transform.translate(
+                                        offset: Offset(0, 40 * (1 - value)),
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(16),
+                                      splashColor: AppColors.primaryFixed
+                                          .withValues(alpha: 0.3),
+                                      onTap: () => context
+                                          .read<MapBloc>()
+                                          .add(MapMarkerSelected(property.id)),
+                                      child: _PropertyPreviewCard(
+                                        property: property,
+                                        distance: _calculateDistance(
+                                          LatLng(property.latitude,
+                                              property.longitude),
+                                          state.userLocation,
+                                        ),
+                                        actionButton: OutlinedButton(
+                                          onPressed: () => Navigator.of(context)
+                                              .pushNamed('/property-detail',
+                                                  arguments: property),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: AppColors.primary,
+                                            side: const BorderSide(
+                                                color: AppColors.primary),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8)),
+                                            minimumSize: const Size(85, 38),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 10),
+                                          ),
+                                          child: const Text('Chi tiết',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13)),
                                         ),
                                       ),
-                                      Expanded(
-                                        child: ListView.builder(
-                                          controller: scrollController,
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: AppSpacing.md),
-                                          itemCount: displayList.length,
-                                          itemBuilder: (context, index) {
-                                            final property = displayList[index];
-                                            return Padding(
-                                              padding: const EdgeInsets.only(
-                                                  bottom: AppSpacing.md),
-                                              child: GestureDetector(
-                                                onTap: () => context
-                                                    .read<MapBloc>()
-                                                    .add(MapMarkerSelected(
-                                                        property.id)),
-                                                child: _PropertyPreviewCard(
-                                                  property: property,
-                                                  distance: _calculateDistance(
-                                                      LatLng(property.latitude,
-                                                          property.longitude),
-                                                      state.userLocation),
-                                                  actionButton: OutlinedButton(
-                                                    onPressed: () => Navigator
-                                                            .of(context)
-                                                        .pushNamed(
-                                                            '/property-detail',
-                                                            arguments:
-                                                                property),
-                                                    style: OutlinedButton.styleFrom(
-                                                        foregroundColor:
-                                                            AppColors.primary,
-                                                        side: const BorderSide(
-                                                            color: AppColors
-                                                                .primary),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            8)),
-                                                        minimumSize: const Size(
-                                                            100, 38)),
-                                                    child: const Text(
-                                                        'Chi tiết',
-                                                        style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold)),
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ),
+                              );
+                            },
+                          ),
                         );
                       },
                     ),
@@ -674,35 +885,83 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
   }
 }
 
-class _PriceMarker extends StatelessWidget {
+class _PriceMarker extends StatefulWidget {
   final String price;
   final bool isActive;
   const _PriceMarker({required this.price, required this.isActive});
 
   @override
+  State<_PriceMarker> createState() => _PriceMarkerState();
+}
+
+class _PriceMarkerState extends State<_PriceMarker>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _spawnCtrl;
+  late final Animation<double> _spawnAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _spawnCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 700));
+    _spawnAnim = CurvedAnimation(parent: _spawnCtrl, curve: Curves.elasticOut);
+
+    // Tạo độ trễ ngẫu nhiên nhẹ dựa vào hashCode của giá để các marker không hiện ra cùng lúc (Staggered Load)
+    Future.delayed(Duration(milliseconds: widget.price.hashCode % 400), () {
+      if (mounted) _spawnCtrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _spawnCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isActive ? Colors.black : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border:
-            isActive ? null : Border.all(color: Colors.grey.shade300, width: 1),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 6,
-              offset: const Offset(0, 3))
-        ],
-      ),
-      child: Center(
-        child: Text(
-          price,
-          style: TextStyle(
-            color: isActive ? Colors.white : Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: isActive ? 14 : 13,
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0, -0.5),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(parent: _spawnCtrl, curve: Curves.bounceOut)),
+      child: FadeTransition(
+        opacity: _spawnAnim,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 1.0, end: widget.isActive ? 1.15 : 1.0),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutBack,
+          builder: (_, scale, child) =>
+              Transform.scale(scale: scale, child: child),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: widget.isActive ? Colors.black : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: widget.isActive
+                  ? Border.all(color: Colors.transparent, width: 1)
+                  : Border.all(color: Colors.grey.shade300, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.isActive
+                      ? Colors.black.withValues(alpha: 0.35)
+                      : Colors.black.withValues(alpha: 0.12),
+                  blurRadius: widget.isActive ? 16 : 6,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+            child: Center(
+              child: Text(
+                widget.price,
+                style: TextStyle(
+                  color: widget.isActive ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: widget.isActive ? 14 : 13,
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -710,17 +969,31 @@ class _PriceMarker extends StatelessWidget {
   }
 }
 
-class _PropertyPreviewCard extends StatelessWidget {
+class _PropertyPreviewCard extends StatefulWidget {
   final PropertyEntity property;
   final String distance;
   final Widget actionButton;
-  final Widget? secondaryActionButton; // Thuộc tính bổ sung nút phụ
+  final Widget? secondaryActionButton;
 
   const _PropertyPreviewCard(
       {required this.property,
       required this.distance,
       required this.actionButton,
       this.secondaryActionButton});
+
+  @override
+  State<_PropertyPreviewCard> createState() => _PropertyPreviewCardState();
+}
+
+class _PropertyPreviewCardState extends State<_PropertyPreviewCard> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -737,24 +1010,68 @@ class _PropertyPreviewCard extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: Stack(
               children: [
-                SizedBox(
-                  width: double.infinity,
-                  height: 145,
-                  child: property.imageUrls.isNotEmpty
-                      ? Image.network(property.imageUrls.first,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                              color: Colors.grey.shade100,
-                              child:
-                                  const Icon(Icons.villa, color: Colors.grey)))
-                      : Container(
-                          color: Colors.grey.shade100,
-                          child: const Icon(Icons.villa, color: Colors.grey)),
+                Hero(
+                  tag: 'property-image-${widget.property.id}',
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 145,
+                    child: widget.property.imageUrls.isNotEmpty
+                        ? PageView.builder(
+                            controller: _pageController,
+                            onPageChanged: (idx) =>
+                                setState(() => _currentPage = idx),
+                            itemCount: widget.property.imageUrls.length,
+                            itemBuilder: (context, index) {
+                              return Image.network(
+                                widget.property.imageUrls[index],
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                    color: Colors.grey.shade100,
+                                    child: const Icon(Icons.villa,
+                                        color: Colors.grey)),
+                              );
+                            },
+                          )
+                        : Container(
+                            color: Colors.grey.shade100,
+                            child: const Icon(Icons.villa, color: Colors.grey)),
+                  ),
                 ),
+                // Premium dots indicator
+                if (widget.property.imageUrls.length > 1)
+                  Positioned(
+                    bottom: 10,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        widget.property.imageUrls.length,
+                        (index) => AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          width: _currentPage == index ? 16 : 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: _currentPage == index
+                                ? Colors.white
+                                : Colors.white.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(3),
+                            boxShadow: [
+                              BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 2,
+                                  offset: const Offset(0, 1))
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 Positioned(
                   top: 12,
                   right: 12,
-                  child: _FavoriteButton(propertyId: property.id),
+                  child: _FavoriteButton(propertyId: widget.property.id),
                 ),
               ],
             ),
@@ -767,7 +1084,7 @@ class _PropertyPreviewCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                        child: Text(property.title,
+                        child: Text(widget.property.title,
                             style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
@@ -778,7 +1095,7 @@ class _PropertyPreviewCard extends StatelessWidget {
                     Row(children: [
                       const Icon(Icons.star, size: 14, color: Colors.black),
                       const SizedBox(width: 2),
-                      Text(property.rating.toString(),
+                      Text(widget.property.rating.toStringAsFixed(1),
                           style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
@@ -787,7 +1104,8 @@ class _PropertyPreviewCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text('${property.district}, Đà Nẵng • Cách $distance',
+                Text(
+                    '${widget.property.district}, Đà Nẵng • Cách ${widget.distance}',
                     style:
                         TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                 const SizedBox(height: 8),
@@ -800,7 +1118,7 @@ class _PropertyPreviewCard extends StatelessWidget {
                         text: TextSpan(children: [
                           TextSpan(
                               text:
-                                  'Từ ${(property.pricePerNight).toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (m) => "${m[1]}.")}đ',
+                                  'Từ ${(widget.property.pricePerNight).toStringAsFixed(0).replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (m) => "${m[1]}.")}đ',
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black,
@@ -816,11 +1134,11 @@ class _PropertyPreviewCard extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (secondaryActionButton != null) ...[
-                          secondaryActionButton!,
+                        if (widget.secondaryActionButton != null) ...[
+                          widget.secondaryActionButton!,
                           const SizedBox(width: 6),
                         ],
-                        actionButton,
+                        widget.actionButton,
                       ],
                     ),
                   ],
@@ -849,6 +1167,7 @@ class _FloatingSearchBarState extends State<_FloatingSearchBar> {
   final GlobalKey _dropdownKey = GlobalKey();
   OverlayEntry? _overlayEntry;
   Timer? _debounceTimer;
+  VoidCallback? _focusListener;
 
   static final List<String> _searchHistory = [
     'Khách sạn Sơn Trà',
@@ -860,12 +1179,18 @@ class _FloatingSearchBarState extends State<_FloatingSearchBar> {
     super.initState();
     _searchController =
         TextEditingController(text: context.read<MapBloc>().state.searchQuery);
-    widget.focusNode.addListener(() {
+    // Lưu reference để dispose đúng cách
+    _focusListener = () {
       if (widget.focusNode.hasFocus) {
         _showSearchOverlay();
       } else {
         _hideSearchOverlay();
       }
+    };
+    widget.focusNode.addListener(_focusListener!);
+    widget.focusNode.addListener(() {
+      if (mounted)
+        setState(() {}); // Kích hoạt rebuild để AnimatedContainer đổi shadow
     });
   }
 
@@ -878,6 +1203,10 @@ class _FloatingSearchBarState extends State<_FloatingSearchBar> {
 
   @override
   void dispose() {
+    // Remove đúng listener đã add — không còn memory leak
+    if (_focusListener != null) {
+      widget.focusNode.removeListener(_focusListener!);
+    }
     _debounceTimer?.cancel();
     _hideSearchOverlay();
     _searchController.dispose();
@@ -895,9 +1224,11 @@ class _FloatingSearchBarState extends State<_FloatingSearchBar> {
       builder: (overlayContext) => Stack(
         children: [
           Positioned.fill(
-              child: Listener(
-                  behavior: HitTestBehavior.translucent,
-                  onPointerDown: (_) => widget.focusNode.unfocus())),
+            child: Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (_) => widget.focusNode.unfocus(),
+            ),
+          ),
           Positioned(
             width: searchBarWidth,
             child: CompositedTransformFollower(
@@ -1028,19 +1359,34 @@ class _FloatingSearchBarState extends State<_FloatingSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final isFocused = widget.focusNode.hasFocus;
+
     return CompositedTransformTarget(
       link: _layerLink,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         height: 56,
         decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2))
-            ]),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            // Viền xanh nhạt khi focus — subtle nhưng rõ ràng
+            color: isFocused
+                ? AppColors.primary.withValues(alpha: 0.40)
+                : Colors.transparent,
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isFocused
+                  ? AppColors.primary.withValues(alpha: 0.12)
+                  : Colors.black.withValues(alpha: 0.10),
+              blurRadius: isFocused ? 20 : 10,
+              spreadRadius: isFocused ? 2 : 0,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: Row(
           children: [
             IconButton(
@@ -1108,6 +1454,7 @@ class _MapFilterModal extends StatefulWidget {
 
 class _MapFilterModalState extends State<_MapFilterModal> {
   RangeValues _currentPriceRange = const RangeValues(0, 10000000);
+  double? _localMinRating;
   List<String> _localAmenities = [];
 
   final List<String> _availableAmenities = [
@@ -1124,6 +1471,7 @@ class _MapFilterModalState extends State<_MapFilterModal> {
     final currentState = context.read<MapBloc>().state;
     _currentPriceRange = RangeValues(
         currentState.minPrice ?? 0, currentState.maxPrice ?? 10000000);
+    _localMinRating = currentState.minRating;
     _localAmenities = List.from(currentState.selectedAmenities);
   }
 
@@ -1137,6 +1485,15 @@ class _MapFilterModalState extends State<_MapFilterModal> {
       ),
       child: Column(
         children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Row(
@@ -1154,8 +1511,16 @@ class _MapFilterModalState extends State<_MapFilterModal> {
                   onPressed: () {
                     setState(() {
                       _currentPriceRange = const RangeValues(0, 10000000);
+                      _localMinRating = null;
                       _localAmenities.clear();
                     });
+                    // Reset BLoC state ngay lập tức — không cần chờ user nhấn nút CTA
+                    context.read<MapBloc>().add(MapFilterApplied(
+                          minPrice: 0,
+                          maxPrice: 10000000,
+                          minRating: null,
+                          selectedAmenities: const [],
+                        ));
                   },
                   child: const Text('Xóa tất cả',
                       style: TextStyle(
@@ -1215,6 +1580,52 @@ class _MapFilterModalState extends State<_MapFilterModal> {
                 const SizedBox(height: 32),
                 const Divider(height: 1),
                 const SizedBox(height: 24),
+
+                // KHU VỰC LỌC SAO TRỰC QUAN (Airbnb Style)
+                Text('Xếp hạng tối thiểu',
+                    style: AppTextStyles.titleLg.copyWith(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18)),
+                const SizedBox(height: 16),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [null, 3.5, 4.0, 4.5, 5.0].map((rating) {
+                      final isSelected = _localMinRating == rating;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(rating == null ? 'Bất kỳ' : '$rating+ ⭐',
+                              style: TextStyle(
+                                  color:
+                                      isSelected ? Colors.white : Colors.black,
+                                  fontWeight: FontWeight.bold)),
+                          selected: isSelected,
+                          onSelected: (bool selected) {
+                            if (selected) {
+                              setState(() => _localMinRating = rating);
+                            }
+                          },
+                          backgroundColor: Colors.white,
+                          selectedColor: Colors.black,
+                          showCheckmark: false,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              side: BorderSide(
+                                  color: isSelected
+                                      ? Colors.black
+                                      : Colors.grey.shade300,
+                                  width: 1.5)),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+                const Divider(height: 1),
+                const SizedBox(height: 24),
                 Text('Tiện ích',
                     style: AppTextStyles.titleLg.copyWith(
                         color: Colors.black,
@@ -1264,6 +1675,8 @@ class _MapFilterModalState extends State<_MapFilterModal> {
           Padding(
             padding: const EdgeInsets.all(20),
             child: BlocBuilder<MapBloc, MapState>(
+              buildWhen: (prev, curr) =>
+                  prev.allProperties != curr.allProperties,
               builder: (context, state) {
                 final minP = _currentPriceRange.start;
                 final maxP = _currentPriceRange.end;
@@ -1271,6 +1684,9 @@ class _MapFilterModalState extends State<_MapFilterModal> {
                 final previewCount = state.allProperties.where((p) {
                   if (p.pricePerNight < minP) return false;
                   if (p.pricePerNight > maxP) return false;
+                  if (_localMinRating != null && p.rating < _localMinRating!) {
+                    return false;
+                  }
                   if (_localAmenities.isNotEmpty &&
                       !_localAmenities.every((a) => p.amenities.contains(a))) {
                     return false;
@@ -1289,6 +1705,7 @@ class _MapFilterModalState extends State<_MapFilterModal> {
                     context.read<MapBloc>().add(MapFilterApplied(
                           minPrice: minP,
                           maxPrice: maxP,
+                          minRating: _localMinRating,
                           selectedAmenities: _localAmenities,
                         ));
                     Navigator.pop(context);
@@ -1308,6 +1725,101 @@ class _MapFilterModalState extends State<_MapFilterModal> {
   }
 }
 
+class _SkeletonCard extends StatefulWidget {
+  const _SkeletonCard();
+  @override
+  State<_SkeletonCard> createState() => _SkeletonCardState();
+}
+
+class _SkeletonCardState extends State<_SkeletonCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) {
+        final shimmer = Color.lerp(
+          Colors.grey.shade200,
+          Colors.grey.shade100,
+          _anim.value,
+        )!;
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Placeholder ảnh
+              Container(
+                height: 145,
+                decoration: BoxDecoration(
+                  color: shimmer,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _bar(shimmer, width: 180, height: 14),
+                    const SizedBox(height: 6),
+                    _bar(shimmer, width: 130, height: 12),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        _bar(shimmer, width: 90, height: 14),
+                        const Spacer(),
+                        _bar(shimmer, width: 80, height: 36, radius: 8),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _bar(Color color,
+      {required double width, required double height, double radius = 6}) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
+}
+
 class _FavoriteButton extends StatefulWidget {
   final String propertyId;
   const _FavoriteButton({required this.propertyId});
@@ -1316,34 +1828,162 @@ class _FavoriteButton extends StatefulWidget {
   State<_FavoriteButton> createState() => _FavoriteButtonState();
 }
 
-class _FavoriteButtonState extends State<_FavoriteButton> {
+class _FavoriteButtonState extends State<_FavoriteButton>
+    with SingleTickerProviderStateMixin {
   bool _isFavorite = false;
+  late final AnimationController _bounceCtrl;
+  late final Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _bounceCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    // TweenSequence tạo hiệu ứng: phình to → nảy lại → ổn định
+    _scaleAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.45), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 1.45, end: 0.90), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 0.90, end: 1.0), weight: 30),
+    ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeOut));
+  }
+
+  @override
+  void dispose() {
+    _bounceCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _isFavorite = !_isFavorite;
-        });
+        setState(() => _isFavorite = !_isFavorite);
+        _bounceCtrl.forward(from: 0); // Trigger mỗi lần tap
       },
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
+      child: ScaleTransition(
+        scale: _scaleAnim,
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.92),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
                 color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 4,
-                offset: const Offset(0, 2))
-          ],
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          // AnimatedSwitcher tạo cross-fade icon khi toggle
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            transitionBuilder: (child, anim) =>
+                ScaleTransition(scale: anim, child: child),
+            child: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+              key: ValueKey(
+                  _isFavorite), // Quan trọng: key khác nhau mới trigger switcher
+              color: _isFavorite ? Colors.red.shade400 : Colors.black54,
+              size: 18,
+            ),
+          ),
         ),
-        child: Icon(
-          _isFavorite ? Icons.favorite : Icons.favorite_border,
-          color: _isFavorite ? Colors.red : Colors.black,
-          size: 18,
-        ),
+      ),
+    );
+  }
+}
+
+class _UserLocationBeacon extends StatefulWidget {
+  const _UserLocationBeacon();
+  @override
+  State<_UserLocationBeacon> createState() => _UserLocationBeaconState();
+}
+
+class _UserLocationBeaconState extends State<_UserLocationBeacon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _ringScale;
+  late final Animation<double> _ringOpacity;
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat();
+    _ringScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+    );
+    _ringOpacity = Tween<double>(begin: 0.6, end: 0.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Vòng sóng lan tỏa
+          AnimatedBuilder(
+            animation: _ctrl,
+            builder: (_, __) => Opacity(
+              opacity: _ringOpacity.value,
+              child: Transform.scale(
+                scale: _ringScale.value,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.blue.shade400,
+                      width: 2.5,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Vòng nền mờ
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.blue.withValues(alpha: 0.20),
+            ),
+          ),
+          // Chấm xanh trung tâm — viền trắng rõ nét
+          Container(
+            width: 13,
+            height: 13,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.blue.shade600,
+              border: Border.all(color: Colors.white, width: 2.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withValues(alpha: 0.4),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -73,6 +73,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     final updatedState = state.copyWith(
         minPrice: () => event.minPrice,
         maxPrice: () => event.maxPrice,
+        minRating: () => event.minRating,
         selectedAmenities: event.selectedAmenities);
     final filtered = _applyFilteringPipeline(updatedState);
     emit(updatedState.copyWith(
@@ -126,6 +127,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
           property.pricePerNight < targetState.minPrice!) return false;
       if (targetState.maxPrice != null &&
           property.pricePerNight > targetState.maxPrice!) return false;
+      if (targetState.minRating != null &&
+          property.rating < targetState.minRating!) return false;
       if (targetState.selectedAmenities.isNotEmpty) {
         final hasAll = targetState.selectedAmenities
             .every((a) => property.amenities.contains(a));
