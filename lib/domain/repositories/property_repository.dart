@@ -5,4 +5,5 @@ abstract class PropertyRepository {
   Future<List<PropertyEntity>> getFeaturedProperties();
   Future<List<PropertyEntity>> getNearbyProperties();
   Future<PropertyEntity> getPropertyById(String id);
+  Future<List<PropertyEntity>> searchProperties(String query, String category);
 }

@@ -1,3 +1,5 @@
+import 'package:latlong2/latlong.dart';
+
 import '../../../domain/entities/property_entity.dart';
 
 enum MapStatus { initial, loading, loaded, error }
@@ -16,8 +18,11 @@ class MapState {
   final String selectedDistrict;
   final double? minPrice;
   final double? maxPrice;
+  final double? minRating;
   final List<String> selectedAmenities;
   final String? errorMessage;
+
+  final LatLng? userLocation;
 
   MapState({
     required this.status,
@@ -29,8 +34,10 @@ class MapState {
     required this.selectedDistrict,
     this.minPrice,
     this.maxPrice,
+    this.minRating,
     required this.selectedAmenities,
     this.errorMessage,
+    this.userLocation,
   });
 
   factory MapState.initial() {
@@ -44,6 +51,7 @@ class MapState {
       selectedDistrict: 'Tất cả',
       minPrice: null,
       maxPrice: null,
+      minRating: null,
       selectedAmenities: [],
     );
   }
@@ -58,8 +66,10 @@ class MapState {
     String? selectedDistrict,
     double? Function()? minPrice,
     double? Function()? maxPrice,
+    double? Function()? minRating,
     List<String>? selectedAmenities,
     String? Function()? errorMessage,
+    LatLng? Function()? userLocation,
   }) {
     return MapState(
       status: status ?? this.status,
@@ -72,8 +82,10 @@ class MapState {
       selectedDistrict: selectedDistrict ?? this.selectedDistrict,
       minPrice: minPrice != null ? minPrice() : this.minPrice,
       maxPrice: maxPrice != null ? maxPrice() : this.maxPrice,
+      minRating: minRating != null ? minRating() : this.minRating,
       selectedAmenities: selectedAmenities ?? this.selectedAmenities,
       errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,
+      userLocation: userLocation != null ? userLocation() : this.userLocation,
     );
   }
 }

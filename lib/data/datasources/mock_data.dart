@@ -4,7 +4,8 @@ class MockData {
       {
         'id': 'u1',
         'name': 'Phan Minh Khôi',
-        'email': 'khoi.phan@email.com',
+        'email': 'khoi.phan@gmail.com',
+        'password': 'khoi1234',
         'avatarUrl':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
       }
@@ -24,11 +25,16 @@ class MockData {
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
         'imageUrls': [
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuDGKDUoW-W3uCUJ5Nr8o_h2iDeoOmQG-HBG6Cza2CfXcC776xbMTRKcXtnCOsYm3PSlrfPdHaBdQGs0lL7_p8lWzAebRFojPb3-yb9BjkrTI-mPcF_L44OuHg07SG_nDo_Y2Jkdpe5YjTuMg_qIE-8TvgbshA48XBuAzk3hUVzlXumjw5XqlTpx_WPYPodWEZ2HzQJoonS1QWgLE6PmgGTlC_V_dH7eo78RNo4Ih53lC07CpGxv2WpqadRIpOADj4d1PJ6Nb8kzRlc'
+          'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
+          'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688',
+          'https://images.unsplash.com/photo-1493809842364-78817add7ffb',
+          'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2',
+          'https://images.unsplash.com/photo-1484154218962-a197022b5858',
         ],
         'amenities': ['Wifi', 'Bếp', 'Máy lạnh', 'Chỗ đậu xe', 'Hồ bơi'],
         'description':
             'Căn hộ cao cấp tọa lạc ngay trung tâm quận Hải Châu, view trọn sông Hàn thơ mộng. Đầy đủ tiện nghi chuẩn thượng lưu.',
+        'categories': ['Xu hướng'],
         'latitude': 16.0665, // Tọa độ thực Hải Châu
         'longitude': 108.2215,
         'city': 'Đà Nẵng',
@@ -65,11 +71,15 @@ class MockData {
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuBwozORqRy0O4Jg0TBxrG_D6N3cIOgy3QVCi5nqyUsrlCrldx4OJuoP7vcVwlRvyD1iY4DBw79n7YMUFxdMll8ADpkbvnWLG2hQFRoHyaix7uQttYYfeJG27-RsDGfpo3bFFpKikKR0HCMg2a8xSD9vg1BfEwCuGUxtMWsOWaoOKV2xaCAfAt1Gm_94HhQ7i6_NIaXirssgN6s4ww9LrGBpOkOsr7QvRpDWqcjyWJq6xCiifR8U9_9qJ9n2_jEoxxFF9lMgKz42wG0',
         'imageUrls': [
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuCJewgMQ2BQcmbNN7-SFroruTgmooTarzm4n18nQE3pLjP9IFFcI32NUL6q3QPcgV8honmToE63FNwVyYBzuylzlSML0C24eICnhcQGAVJieGfg4RVde6d_aTsMnuVExh_OSrsEcbW1PqV9xoUh5x3PTQ4zmGHJUMcnsu6SPZzoGVZOtE83zW0A3sk4WAPBjYoV-tVtvbPzWq8XGuRgQ4No3HSNUfsv13Fi-gcwqxfoJ3bIYT7uKXXy9PvYdy1KmJPAldZhPN_myiQ'
+          'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2',
+          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b',
+          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb',
+          'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
         ],
         'amenities': ['Hồ bơi', 'Ăn sáng', 'Máy lạnh', 'Sân vườn', 'Sát biển'],
         'description':
             'Trải nghiệm không gian nghỉ dưỡng tuyệt hảo ngay sát bờ biển Mỹ Khê, quận Ngũ Hành Sơn.',
+        'categories': ['Gần biển', 'Xu hướng'],
         'latitude': 16.0352, // Tọa độ thực Ngũ Hành Sơn (gần Resort)
         'longitude': 108.2483,
         'city': 'Đà Nẵng',
@@ -106,11 +116,14 @@ class MockData {
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
         'imageUrls': [
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuDGKDUoW-W3uCUJ5Nr8o_h2iDeoOmQG-HBG6Cza2CfXcC776xbMTRKcXtnCOsYm3PSlrfPdHaBdQGs0lL7_p8lWzAebRFojPb3-yb9BjkrTI-mPcF_L44OuHg07SG_nDo_Y2Jkdpe5YjTuMg_qIE-8TvgbshA48XBuAzk3hUVzlXumjw5XqlTpx_WPYPodWEZ2HzQJoonS1QWgLE6PmgGTlC_V_dH7eo78RNo4Ih53lC07CpGxv2WpqadRIpOADj4d1PJ6Nb8kzRlc'
+          'https://images.unsplash.com/photo-1449156001437-3a16c1dfbe2c',
+          'https://images.unsplash.com/photo-1510798831971-661eb04b3739',
+          'https://images.unsplash.com/photo-1521401830884-6c03c1c87ebb',
         ],
         'amenities': ['Wifi', 'Máy lạnh', 'Sân vườn'],
         'description':
             'Homestay ẩn mình giữa thiên nhiên hoang sơ của bán đảo Sơn Trà, thích hợp cho việc chữa lành và trốn khói bụi đô thị.',
+        'categories': ['Vùng núi', 'Độc đáo'],
         'latitude': 16.0982, // Tọa độ thực khu Sơn Trà
         'longitude': 108.2614,
         'city': 'Đà Nẵng',
@@ -138,11 +151,15 @@ class MockData {
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuBwozORqRy0O4Jg0TBxrG_D6N3cIOgy3QVCi5nqyUsrlCrldx4OJuoP7vcVwlRvyD1iY4DBw79n7YMUFxdMll8ADpkbvnWLG2hQFRoHyaix7uQttYYfeJG27-RsDGfpo3bFFpKikKR0HCMg2a8xSD9vg1BfEwCuGUxtMWsOWaoOKV2xaCAfAt1Gm_94HhQ7i6_NIaXirssgN6s4ww9LrGBpOkOsr7QvRpDWqcjyWJq6xCiifR8U9_9qJ9n2_jEoxxFF9lMgKz42wG0',
         'imageUrls': [
-          'https://lh3.googleusercontent.com/aida-public/AB6AXuCJewgMQ2BQcmbNN7-SFroruTgmooTarzm4n18nQE3pLjP9IFFcI32NUL6q3QPcgV8honmToE63FNwVyYBzuylzlSML0C24eICnhcQGAVJieGfg4RVde6d_aTsMnuVExh_OSrsEcbW1PqV9xoUh5x3PTQ4zmGHJUMcnsu6SPZzoGVZOtE83zW0A3sk4WAPBjYoV-tVtvbPzWq8XGuRgQ4No3HSNUfsv13Fi-gcwqxfoJ3bIYT7uKXXy9PvYdy1KmJPAldZhPN_myiQ'
+          'https://images.unsplash.com/photo-1564013799919-ab600027ffc6',
+          'https://images.unsplash.com/photo-1598928506311-c55dd1b65e90',
+          'https://images.unsplash.com/photo-1584622650111-993a426fbf0a',
+          'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9',
         ],
         'amenities': ['Wifi', 'Máy giặt', 'Máy lạnh', 'View sông Hàn', 'Gym'],
         'description':
             'Studio hiện đại nằm sát đường Bạch Đằng, tầm nhìn panorama ngắm trọn vẹn cầu Rồng và sông Hàn thơ mộng.',
+        'categories': ['Xu hướng', 'Độc đáo'],
         'latitude': 16.0757, // Khu vực đường Bạch Đằng, Hải Châu
         'longitude': 108.2238,
         'city': 'Đà Nẵng',
@@ -181,6 +198,7 @@ class MockData {
         ],
         'description':
             'Khách sạn phong cách Boutique trẻ trung nằm trên đường Võ Nguyên Giáp, đối diện bãi tắm Phạm Văn Đồng sầm uất.',
+        'categories': ['Gần biển', 'Xu hướng'],
         'latitude': 16.0622, // Khu vực Võ Nguyên Giáp, Sơn Trà
         'longitude': 108.2461,
         'city': 'Đà Nẵng',
@@ -219,6 +237,7 @@ class MockData {
         ],
         'description':
             'Căn hộ dịch vụ ấm cúng nằm ngay trung tâm khu phố Tây An Thượng, cách biển Mỹ Khê chỉ 3 phút đi bộ.',
+        'categories': ['Gần biển'],
         'latitude': 16.0505, // Khu phố du lịch An Thượng, Ngũ Hành Sơn
         'longitude': 108.2445,
         'city': 'Đà Nẵng',
@@ -257,6 +276,7 @@ class MockData {
         ],
         'description':
             'Nhà nguyên căn tọa lạc trên đường Trần Hưng Đạo, vị trí đắc địa để ngắm Cầu Rồng phun lửa và nước vào cuối tuần.',
+        'categories': ['Độc đáo', 'Di sản'],
         'latitude': 16.0682, // Đường Trần Hưng Đạo sát Sông Hàn, Sơn Trà
         'longitude': 108.2325,
         'city': 'Đà Nẵng',
@@ -295,6 +315,7 @@ class MockData {
         ],
         'description':
             'Biệt thự sinh thái yên tĩnh tại khu đô thị Hòa Xuân, không gian rộng rãi thoáng đãng phù hợp cho gia đình nghỉ dưỡng.',
+        'categories': ['Xu hướng'],
         'latitude': 16.0125, // Khu đô thị đảo sinh thái Hòa Xuân, Cẩm Lệ
         'longitude': 108.2204,
         'city': 'Đà Nẵng',
