@@ -108,7 +108,8 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   List<PropertyEntity> _applyFilteringPipeline(MapState targetState) {
     return _masterList.where((property) {
-      if (property.city.toLowerCase() != targetState.selectedCity.toLowerCase())
+      if (targetState.selectedCity != 'Tất cả' &&
+          property.city.toLowerCase() != targetState.selectedCity.toLowerCase())
         return false;
       if (targetState.selectedDistrict != 'Tất cả' &&
           property.district.toLowerCase() !=

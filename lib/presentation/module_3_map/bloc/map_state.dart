@@ -47,7 +47,7 @@ class MapState {
       visibleProperties: [],
       selectedProperty: null,
       searchQuery: '',
-      selectedCity: 'Đà Nẵng',
+      selectedCity: 'Tất cả',
       selectedDistrict: 'Tất cả',
       minPrice: null,
       maxPrice: null,
