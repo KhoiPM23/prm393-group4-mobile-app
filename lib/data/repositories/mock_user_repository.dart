@@ -133,6 +133,9 @@ class MockUserRepository implements UserRepository {
 
   static bool isValidEmail(String email) => _isValidEmail(_normalizeEmail(email));
 
+  static bool hasEmail(String email) =>
+      _findUserByEmail(_normalizeEmail(email)) != null;
+
   static String _normalizeEmail(String email) => email.trim().toLowerCase();
 
   static Map<String, dynamic>? _findUserByEmail(String email) {

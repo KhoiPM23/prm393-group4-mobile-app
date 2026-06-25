@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/firebase_user_repository.dart';
 import '../../data/repositories/mock_user_repository.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
@@ -22,7 +23,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _otpController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _userRepository = MockUserRepository();
+  final _userRepository = FirebaseUserRepository();
   bool _obscureNew = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;

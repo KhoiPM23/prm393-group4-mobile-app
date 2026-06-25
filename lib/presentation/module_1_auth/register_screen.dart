@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/firebase_user_repository.dart';
 import '../../data/repositories/mock_user_repository.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
@@ -22,7 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-  final _userRepository = MockUserRepository();
+  final _userRepository = FirebaseUserRepository();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/firebase_user_repository.dart';
 import '../../data/repositories/mock_user_repository.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
@@ -18,10 +19,11 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _userRepository = MockUserRepository();
+  final _userRepository = FirebaseUserRepository();
   bool _isLoading = false;
   bool _isSent = false;
   String? _demoOtp;
+  bool _isFirebaseFlow = false;
 
   @override
   void dispose() {
@@ -39,7 +41,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!mounted) return;
       setState(() {
         _isSent = true;
-        _demoOtp = otp;
+        _demoOtp = otp.isEmpty ? null : otp;
+        _isFirebaseFlow = otp.isEmpty;
       });
     } on AuthException catch (error) {
       if (!mounted) return;
@@ -249,7 +252,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
-                                    'Vui lòng kiểm tra hộp thư ${_emailController.text} và lấy mã OTP để đổi mật khẩu.',
+                                    _isFirebaseFlow
+                                        ? 'Vui lòng kiểm tra hộp thư ${_emailController.text} và mở link Firebase để đổi mật khẩu.'
+                                        : 'Vui lòng kiểm tra hộp thư ${_emailController.text} và lấy mã OTP để đổi mật khẩu.',
                                     style: AppTextStyles.bodyMd.copyWith(
                                       color: AppColors.onSurfaceVariant,
                                     ),
