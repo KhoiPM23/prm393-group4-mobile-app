@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "992573755019",
+    "project_id": "prm393-group4-mobile-app",
+    "storage_bucket": "prm393-group4-mobile-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:992573755019:android:cebf8d2b7d699fe7be0e8e",
+        "android_client_info": {
+          "package_name": "com.example.hotelbookingapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkaYtJx8TjlAuuUA0wfgV5trWhXn5GkvY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
