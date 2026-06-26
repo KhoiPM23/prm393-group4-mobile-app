@@ -613,15 +613,3 @@ class _BookingFooter extends StatelessWidget {
     );
   }
 }
-
-class _RoomData {
-  final String name, price, bed, area, amenity, imageUrl;
-  const _RoomData({
-    required this.name,
-    required this.price,
-    required this.bed,
-    required this.area,
-    required this.amenity,
-    required this.imageUrl,
-  });
-}

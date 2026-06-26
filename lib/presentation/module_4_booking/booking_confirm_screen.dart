@@ -520,25 +520,59 @@ class _PaymentMethodSection extends StatelessWidget {
       children: [
         Text('Phương thức thanh toán', style: AppTextStyles.titleLg.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
         const SizedBox(height: AppSpacing.md),
-        ...List.generate(methods.length, (i) {
-          final isSelected = selected == i;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: GestureDetector(
-              onTap: () => onChanged(i),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppColors.surfaceContainerLowest, borderRadius: BorderRadius.circular(AppRadius.xl), border: Border.all(color: isSelected ? AppColors.primary : AppColors.outlineVariant, width: isSelected ? 2 : 1)),
-                child: Row(children: [
-                  Container(width: 40, height: 40, decoration: BoxDecoration(color: methods[i]['bg'] as Color, borderRadius: BorderRadius.circular(8)), child: Icon(methods[i]['icon'] as IconData, color: methods[i]['color'] as Color, size: 22)),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text(methods[i]['name'] as String, style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w500))),
-                  Radio<int>(value: i, groupValue: selected, onChanged: (v) => onChanged(v!), activeColor: AppColors.primary),
-                ]),
-              ),
-            ),
-          );
-        }),
+        RadioGroup<int>(
+          groupValue: selected,
+          onChanged: (v) {
+            if (v != null) onChanged(v);
+          },
+          child: Column(
+            children: List.generate(methods.length, (i) {
+              final isSelected = selected == i;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: GestureDetector(
+                  onTap: () => onChanged(i),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLowest,
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
+                      border: Border.all(
+                        color: isSelected ? AppColors.primary : AppColors.outlineVariant,
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: methods[i]['bg'] as Color,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            methods[i]['icon'] as IconData,
+                            color: methods[i]['color'] as Color,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            methods[i]['name'] as String,
+                            style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        Radio<int>(value: i, activeColor: AppColors.primary),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
       ],
     );
   }
