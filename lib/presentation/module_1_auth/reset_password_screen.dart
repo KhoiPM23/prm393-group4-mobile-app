@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/firebase_user_repository.dart';
+import '../../data/repositories/mock_user_repository.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -17,17 +19,19 @@ class ResetPasswordScreen extends StatefulWidget {
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _otpController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _userRepository = FirebaseUserRepository();
   bool _obscureNew = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
   bool _isSuccess = false;
+  bool _receivedEmailArgument = false;
 
   bool get _hasMinLength => _newPasswordController.text.length >= 8;
-  bool get _hasAlphanumeric =>
-      RegExp(r'[a-zA-Z]').hasMatch(_newPasswordController.text) &&
-      RegExp(r'[0-9]').hasMatch(_newPasswordController.text);
+  bool get _hasLetter => RegExp(r'[a-zA-Z]').hasMatch(_newPasswordController.text);
 
   @override
   void initState() {
@@ -36,7 +40,20 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_receivedEmailArgument) return;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is String && args.isNotEmpty) {
+      _emailController.text = args;
+    }
+    _receivedEmailArgument = true;
+  }
+
+  @override
   void dispose() {
+    _emailController.dispose();
+    _otpController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -45,15 +62,41 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Future<void> _handleUpdate() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1, milliseconds: 500));
-    if (!mounted) return;
-    setState(() {
-      _isLoading = false;
-      _isSuccess = true;
-    });
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
+    try {
+      await _userRepository.resetPassword(
+        email: _emailController.text,
+        otp: _otpController.text,
+        newPassword: _newPasswordController.text,
+      );
+      if (!mounted) return;
+      setState(() => _isSuccess = true);
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      _showError(error.message);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppTextStyles.bodyMd.copyWith(color: Colors.white),
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+      ),
+    );
   }
 
   @override
@@ -139,12 +182,43 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
-                            'Vui lòng nhập mật khẩu mới cho tài khoản của bạn. Đảm bảo mật khẩu của bạn có độ bảo mật cao.',
+                            'Vui lòng nhập OTP đã nhận trong email và mật khẩu mới cho tài khoản của bạn.',
                             style: AppTextStyles.bodyLg.copyWith(
                               color: AppColors.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.xxl),
+                          VibeInputField(
+                            label: 'Email',
+                            hint: 'example@vibelocals.com',
+                            controller: _emailController,
+                            prefixIcon: Icons.mail_outline,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (v) {
+                              if (v == null || v.isEmpty) {
+                                return 'Vui lòng nhập email';
+                              }
+                              if (!MockUserRepository.isValidEmail(v)) {
+                                return 'Email không hợp lệ';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          VibeInputField(
+                            label: 'Mã OTP',
+                            hint: 'Nhập mã OTP',
+                            controller: _otpController,
+                            prefixIcon: Icons.verified_user_outlined,
+                            keyboardType: TextInputType.number,
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return 'Vui lòng nhập OTP';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: AppSpacing.md),
                           // New password
                           VibeInputField(
                             label: 'Mật khẩu mới',
@@ -167,8 +241,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               if (v == null || v.isEmpty) {
                                 return 'Vui lòng nhập mật khẩu mới';
                               }
-                              if (v.length < 8) {
-                                return 'Mật khẩu ít nhất 8 ký tự';
+                              if (!MockUserRepository.isValidPassword(v)) {
+                                return 'Mật khẩu ít nhất 8 ký tự và có 1 chữ cái';
                               }
                               return null;
                             },
@@ -216,8 +290,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                 ),
                                 const SizedBox(height: 8),
                                 _Requirement(
-                                  label: 'Bao gồm chữ cái và chữ số',
-                                  isMet: _hasAlphanumeric,
+                                  label: 'Có ít nhất 1 chữ cái',
+                                  isMet: _hasLetter,
                                 ),
                               ],
                             ),
