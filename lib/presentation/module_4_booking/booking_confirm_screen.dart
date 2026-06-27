@@ -278,8 +278,11 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> with Widget
 
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lỗi khởi tạo thanh toán. Vui lòng thử lại.'),
+        SnackBar(
+          content: Text(
+            _payOSRepository.lastError ??
+                'Lỗi khởi tạo thanh toán. Vui lòng thử lại.',
+          ),
         ),
       );
     }
