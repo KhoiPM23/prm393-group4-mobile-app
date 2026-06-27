@@ -14,11 +14,19 @@ class PayOSRepository {
     required String description,
   }) async {
     try {
+      // LOGIC MỚI: Chỉ lấy 4 chữ số đầu tiên từ trái qua để test Sandbox
+      // Ví dụ: 2.090.500 -> "2090500" -> "2090" -> 2090đ
+      String amountStr = amount.toInt().toString();
+      int testAmount = amount.toInt();
+      if (amountStr.length > 4) {
+        testAmount = int.parse(amountStr.substring(0, 4));
+      }
+
       final response = await _dio.post(
         '$_baseUrl/create-payment-link',
         data: {
           'orderCode': orderCode,
-          'amount': amount.toInt(),
+          'amount': testAmount, // Gửi số tiền đã được "thu gọn"
           'description': description,
         },
       );
@@ -39,6 +47,17 @@ class PayOSRepository {
     } catch (e) {
       debugPrint('Lỗi PayOSRepository: $e');
       return false;
+    }
+  }
+  Future<String> verifyPayment(int orderCode) async {
+    try {
+      final response = await _dio.get('$_baseUrl/verify-payment/$orderCode');
+      if (response.statusCode == 200 && response.data['code'] == '00') {
+        return response.data['data']['status']; // Trả về 'PAID', 'PENDING', 'CANCELLED'
+      }
+      return 'ERROR';
+    } catch (e) {
+      return 'ERROR';
     }
   }
 }

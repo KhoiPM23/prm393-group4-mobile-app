@@ -5,6 +5,7 @@ import '../datasources/mock_data.dart';
 class BookingModel extends BookingEntity {
   const BookingModel({
     required super.id,
+    required super.orderCode,
     required super.userId,
     required super.propertyId,
     required super.property,
@@ -28,6 +29,7 @@ class BookingModel extends BookingEntity {
   factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
       id: json['id'] as String,
+      orderCode: json['orderCode'] as int? ?? DateTime.now().millisecondsSinceEpoch ~/ 1000,
       userId: json['userId'] as String? ?? 'user_default',
       propertyId: json['propertyId'] as String? ?? 'prop_default',
       property: PropertyModel.fromJson(json['property'] as Map<String, dynamic>),

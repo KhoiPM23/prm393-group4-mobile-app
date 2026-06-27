@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../domain/entities/property_entity.dart';
 import '../../domain/entities/room_entity.dart';
 import '../../data/models/property_model.dart';
+import '../../data/repositories/payos_repository.dart';
 import '../widgets/vibe_ui_components.dart';
+import 'dart:async';
+import 'package:app_links/app_links.dart'; // Thêm import này
 
 /// Màn hình Xác nhận Đặt phòng VibeLocals
 class BookingConfirmScreen extends StatefulWidget {
@@ -15,7 +19,9 @@ class BookingConfirmScreen extends StatefulWidget {
   State<BookingConfirmScreen> createState() => _BookingConfirmScreenState();
 }
 
-class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
+class _BookingConfirmScreenState extends State<BookingConfirmScreen> with WidgetsBindingObserver {
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
   PropertyEntity? _property;
   RoomEntity? _room;
   DateTime? _checkIn;
@@ -24,10 +30,124 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
   final _promoController = TextEditingController();
   bool _isPromoApplied = false;
   bool _isLoading = false;
+  bool _isWaitingForPayment = false; // MỚI: Chỉ xử lý link nếu đang chờ thanh toán
+  int? _currentOrderCode; // Lưu mã đơn hàng hiện tại để tự động kiểm tra
+
+  final _payOSRepository = PayOSRepository();
 
   // Current viewing month
   int _viewMonth = DateTime.now().month;
   int _viewYear = DateTime.now().year;
+
+  @override
+  void initState() {
+    super.initState();
+    // Đăng ký theo dõi trạng thái sống của App
+    WidgetsBinding.instance.addObserver(this);
+    // Khởi tạo lắng nghe Deep Link
+    _initDeepLinkListener();
+  }
+
+  @override
+  void dispose() {
+    // Hủy theo dõi trạng thái App
+    WidgetsBinding.instance.removeObserver(this);
+    // Hủy lắng nghe Deep Link khi thoát màn hình
+    _linkSubscription?.cancel();
+    _promoController.dispose();
+    super.dispose();
+  }
+
+  // TỰ ĐỘNG KIỂM TRA KHI QUAY LẠI APP
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _isWaitingForPayment && _currentOrderCode != null) {
+      debugPrint('Lifecycle: Quay lại App. Tự động kiểm tra đơn hàng $_currentOrderCode');
+      _checkPaymentStatus(_currentOrderCode!);
+    }
+  }
+
+  void _initDeepLinkListener() {
+    _appLinks = AppLinks();
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) async {
+      if (!_isWaitingForPayment) return;
+
+      debugPrint('DeepLink: Nhận được link quay lại: $uri');
+      if (uri.host == 'payment-success' && _currentOrderCode != null) {
+        _checkPaymentStatus(_currentOrderCode!);
+      }
+    });
+  }
+
+  // HÀM XÁC THỰC CHUNG (Dùng cho cả DeepLink và Lifecycle)
+  Future<void> _checkPaymentStatus(int orderCode) async {
+    // Tránh kiểm tra nếu đang loading
+    if (_isLoading) return;
+
+    if (mounted) {
+      setState(() => _isLoading = true);
+      // Thông báo cho người dùng biết app đang tự động kiểm tra
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đang xác thực giao dịch...'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
+
+    final status = await _payOSRepository.verifyPayment(orderCode);
+    if (mounted) setState(() => _isLoading = false);
+
+    if (status == 'PAID') {
+      setState(() {
+        _isWaitingForPayment = false;
+        _currentOrderCode = null;
+      });
+      _handlePaymentReturn();
+    } else if (status == 'CANCELLED') {
+      setState(() {
+        _isWaitingForPayment = false;
+        _currentOrderCode = null;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Bạn đã hủy thanh toán. Vui lòng thử lại.')),
+        );
+      }
+    } else {
+      // Trường hợp PENDING hoặc trạng thái khác
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Thanh toán đang chờ xử lý (Trạng thái: $status)'),
+            action: SnackBarAction(
+              label: 'Thử lại',
+              onPressed: () => _checkPaymentStatus(orderCode),
+            ),
+          ),
+        );
+      }
+      debugPrint('Trạng thái hiện tại: $status. Tiếp tục chờ...');
+    }
+  }
+
+  void _handlePaymentReturn() {
+    // Tự động hiện Dialog thành công khi quay lại từ trình duyệt
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _BookingSuccessDialog(
+        propertyName: _room?.title ?? _property!.title,
+        onClose: () {
+          Navigator.of(context).pop();
+          Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+        },
+      ),
+    );
+  }
 
   @override
   void didChangeDependencies() {
@@ -50,12 +170,6 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
         // ...
       }
     }
-  }
-
-  @override
-  void dispose() {
-    _promoController.dispose();
-    super.dispose();
   }
 
   void _selectDate(int day) {
@@ -127,22 +241,43 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> {
 
   Future<void> _handleConfirm() async {
     if (_property == null) return;
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (!mounted) return;
-    setState(() => _isLoading = false);
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => _BookingSuccessDialog(
-        propertyName: _room?.title ?? _property!.title,
-        onClose: () {
-          Navigator.of(context).pop();
-          Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
-        },
-      ),
+    final orderCode = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+    // Lưu lại để dùng khi App được mở lại
+    _currentOrderCode = orderCode;
+
+    // Bật trạng thái chờ trước khi mở PayOS
+    setState(() {
+      _isLoading = true;
+      _isWaitingForPayment = true;
+    });
+
+    final success = await _payOSRepository.createPayment(
+      orderCode: orderCode,
+      amount: _total,
+      description: 'Thanh toan ${_room?.title ?? _property!.title}',
     );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+
+      // Nếu không mở được PayOS thì hủy trạng thái chờ
+      if (!success) {
+        _isWaitingForPayment = false;
+        _currentOrderCode = null;
+      }
+    });
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lỗi khởi tạo thanh toán. Vui lòng thử lại.'),
+        ),
+      );
+    }
   }
 
   @override
@@ -511,14 +646,19 @@ class _PaymentMethodSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final methods = [
-      {'name': 'Ví điện tử MoMo', 'icon': Icons.account_balance_wallet_outlined, 'color': Color(0xFFAD1457), 'bg': Color(0xFFFCE4EC)},
-      {'name': 'Thẻ ngân hàng', 'icon': Icons.credit_card_outlined, 'color': Color(0xFF1565C0), 'bg': Color(0xFFE3F2FD)},
-      {'name': 'Chuyển khoản QR', 'icon': Icons.qr_code_2_outlined, 'color': Color(0xFF2E7D32), 'bg': Color(0xFFE8F5E9)},
+      {
+        'name': 'Thanh toán qua PayOS',
+        'icon': Icons.account_balance_wallet_outlined,
+        'color': const Color(0xFFAD1457),
+        'bg': const Color(0xFFFCE4EC)
+      },
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Phương thức thanh toán', style: AppTextStyles.titleLg.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
+        Text('Phương thức thanh toán',
+            style: AppTextStyles.titleLg
+                .copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
         const SizedBox(height: AppSpacing.md),
         RadioGroup<int>(
           groupValue: selected,
@@ -535,38 +675,29 @@ class _PaymentMethodSection extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppRadius.xl),
-                      border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.outlineVariant,
-                        width: isSelected ? 2 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
+                        color: AppColors.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(AppRadius.xl),
+                        border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.outlineVariant,
+                            width: isSelected ? 2 : 1)),
+                    child: Row(children: [
+                      Container(
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: methods[i]['bg'] as Color,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            methods[i]['icon'] as IconData,
-                            color: methods[i]['color'] as Color,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            methods[i]['name'] as String,
-                            style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        Radio<int>(value: i, activeColor: AppColors.primary),
-                      ],
-                    ),
+                              color: methods[i]['bg'] as Color,
+                              borderRadius: BorderRadius.circular(8)),
+                          child: Icon(methods[i]['icon'] as IconData,
+                              color: methods[i]['color'] as Color, size: 22)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: Text(methods[i]['name'] as String,
+                              style: AppTextStyles.bodyLg
+                                  .copyWith(fontWeight: FontWeight.w500))),
+                      Radio<int>(value: i, activeColor: AppColors.primary),
+                    ]),
                   ),
                 ),
               );
