@@ -4,7 +4,7 @@ class MockData {
       {
         'id': 'u1',
         'name': 'Phan Minh Khôi',
-        'email': 'khoi.phan@gmail.com',
+        'email': 'khoi.phan@email.com',
         'password': 'khoi1234',
         'avatarUrl':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
@@ -93,15 +93,6 @@ class MockData {
             'amenities': ['Bàn ủi', 'Lò sưởi', 'Hồ bơi', 'Máy sấy tóc'],
             'imageUrls': ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b'],
             'description': 'Thức dậy với tiếng sóng vỗ rì rào.'
-          },
-          {
-            'id': 'r2_p2',
-            'title': 'Villa Cận Biển 3 Phòng Ngủ',
-            'type': 'Villa',
-            'pricePerNight': 7500000.0,
-            'amenities': ['Báo khí CO', 'Bàn làm việc', 'Bồn tắm', 'Ban công', 'Khu BBQ'],
-            'imageUrls': ['https://images.unsplash.com/photo-1542314831-068cd1dbfeeb'],
-            'description': 'Đỉnh cao của sự sang trọng và riêng tư.'
           }
         ]
       },
@@ -220,7 +211,7 @@ class MockData {
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuBwozORqRy0O4Jg0TBxrG_D6N3cIOgy3QVCi5nqyUsrlCrldx4OJuoP7vcVwlRvyD1iY4DBw79n7YMUFxdMll8ADpkbvnWLG2hQFRoHyaix7uQttYYfeJG27-RsDGfpo3bFFpKikKR0HCMg2a8xSD9vg1BfEwCuGUxtMWsOWaoOKV2xaCAfAt1Gm_94HhQ7i6_NIaXirssgN6s4ww9LrGBpOkOsr7QvRpDWqcjyWJq6xCiifR8U9_9qJ9n2_jEoxxFF9lMgKz42wG0',
         'imageUrls': [
-          'https://images.unsplash.com/photo-1582719478250-c8940ce97ae3', 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304'
+          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b', 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304'
         ],
         'amenities': ['Khu BBQ', 'Báo khí CO', 'Bàn làm việc', 'Máy giặt', 'Lò sưởi', 'Wifi', 'Bàn ủi', 'Bếp', 'Hồ bơi', 'Máy sấy tóc'],
         'description':
@@ -325,7 +316,7 @@ class MockData {
         'amenities': ['Bồn tắm', 'Ban công', 'Máy sấy tóc', 'Lò sưởi trong nhà', 'Ăn sáng', 'Chỗ đậu xe', 'Bàn ủi', 'Bếp', 'Khu BBQ', 'Gym', 'Wifi', 'Báo khí CO', 'Báo khói', 'Máy giặt', 'Bàn làm việc', 'Lò sưởi', 'View biển'],
         'description': 'Khu nghỉ dưỡng 5 sao mang đậm phong cách Hàn Quốc kết hợp với nét duyên dáng của miền Trung Việt Nam.',
         'categories': ['Resort', 'Gần biển'],
-        'latitude': 15.9328,
+        'latitude': 15.9328, // Tọa độ Điện Bàn
         'longitude': 108.3185,
         'city': 'Quảng Nam',
         'district': 'Điện Bàn',
@@ -336,7 +327,7 @@ class MockData {
             'type': 'Double',
             'pricePerNight': 3500000.0,
             'amenities': ['Lò sưởi', 'Ban công', 'Gym', 'Bàn làm việc', 'Báo khí CO', 'Máy giặt', 'Bồn tắm'],
-            'imageUrls': ['https://images.unsplash.com/photo-1582719508461-905c673771fd'],
+            'imageUrls': ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b'],
             'description': 'Phòng nghỉ sang trọng với tầm nhìn hướng ra đại dương.'
           }
         ]
@@ -358,7 +349,7 @@ class MockData {
         'amenities': ['View biển', 'Gym', 'Bàn ủi', 'Lò sưởi', 'Ban công', 'Máy sấy tóc', 'Cho phép thú cưng', 'Bồn tắm', 'Máy giặt', 'Lò sưởi trong nhà', 'Báo khí CO'],
         'description': 'Nơi trú ẩn hoàn hảo kết hợp giữa văn hóa Việt Nam truyền thống và kiến trúc tre đương đại.',
         'categories': ['Resort', 'Chăm sóc sức khỏe'],
-        'latitude': 15.9866,
+        'latitude': 15.9866, // Tọa độ Ngũ Hành Sơn
         'longitude': 108.2831,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
@@ -391,7 +382,7 @@ class MockData {
         'amenities': ['Máy sấy tóc', 'Bàn ủi', 'Khu BBQ', 'Báo khói', 'Lò sưởi', 'Bếp', 'Gym', 'Wifi', 'Máy lạnh', 'Chỗ đậu xe', 'Cho phép thú cưng', 'Máy giặt', 'View biển', 'Lò sưởi trong nhà', 'Báo khí CO', 'Hồ bơi', 'Ăn sáng'],
         'description': 'Khu nghỉ dưỡng di sản đầu tiên tại Việt Nam mang đậm phong cách Chăm Pa.',
         'categories': ['Resort', 'Sang trọng'],
-        'latitude': 16.0357,
+        'latitude': 16.0357, // Tọa độ Ngũ Hành Sơn
         'longitude': 108.2505,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
@@ -424,7 +415,7 @@ class MockData {
         'amenities': ['Báo khí CO', 'Wifi', 'Báo khói', 'Bàn ủi', 'Chỗ đậu xe', 'Máy lạnh', 'View biển', 'Máy giặt', 'Cho phép thú cưng', 'Bếp', 'Ban công', 'Khu BBQ', 'Lò sưởi', 'Gym', 'Hồ bơi', 'Ăn sáng', 'Máy sấy tóc', 'Bồn tắm'],
         'description': 'Thiên đường nghỉ dưỡng lý tưởng cho gia đình với hồ bơi cát mô phỏng bãi biển thu nhỏ.',
         'categories': ['Gia đình', 'Resort'],
-        'latitude': 16.0163,
+        'latitude': 16.0163, // Tọa độ Ngũ Hành Sơn
         'longitude': 108.2612,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
@@ -457,7 +448,7 @@ class MockData {
         'amenities': ['Báo khói', 'Cho phép thú cưng', 'Lò sưởi', 'Lò sưởi trong nhà', 'Wifi', 'Máy giặt', 'Gym', 'Ăn sáng', 'Khu BBQ', 'Máy sấy tóc', 'View biển', 'Bàn ủi', 'Bồn tắm', 'Ban công', 'Hồ bơi', 'Bàn làm việc', 'Chỗ đậu xe'],
         'description': 'Khu nghỉ dưỡng quốc tế nằm nép mình dưới chân ngọn núi Ngũ Hành Sơn hùng vĩ.',
         'categories': ['Resort', 'Cặp đôi'],
-        'latitude': 16.0084,
+        'latitude': 16.0084, // Tọa độ Ngũ Hành Sơn
         'longitude': 108.2655,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
@@ -490,7 +481,7 @@ class MockData {
         'amenities': ['Máy giặt', 'Chỗ đậu xe', 'Cho phép thú cưng', 'Bồn tắm', 'Lò sưởi trong nhà', 'Ăn sáng', 'Bàn làm việc', 'Báo khói', 'Khu BBQ', 'Wifi', 'Lò sưởi', 'Hồ bơi', 'Bếp', 'Ban công'],
         'description': 'Chuỗi biệt thự ven biển tuyệt đẹp mang kiến trúc tân cổ điển sang trọng.',
         'categories': ['Villa', 'Gia đình'],
-        'latitude': 15.9922,
+        'latitude': 15.9922, // Tọa độ Ngũ Hành Sơn
         'longitude': 108.2750,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
@@ -523,7 +514,7 @@ class MockData {
         'amenities': ['Máy sấy tóc', 'Cho phép thú cưng', 'Bếp', 'View biển', 'Báo khí CO', 'Khu BBQ', 'Máy giặt', 'Máy lạnh', 'Lò sưởi', 'Wifi', 'Báo khói', 'Lò sưởi trong nhà', 'Ban công', 'Bàn ủi', 'Bàn làm việc', 'Hồ bơi'],
         'description': 'Trải nghiệm văn hóa và dịch vụ chuẩn Nhật Bản ngay tại miền Trung Việt Nam.',
         'categories': ['Resort', 'Thư giãn'],
-        'latitude': 15.9392,
+        'latitude': 15.9392, // Tọa độ Điện Bàn
         'longitude': 108.3150,
         'city': 'Quảng Nam',
         'district': 'Điện Bàn',
@@ -556,7 +547,7 @@ class MockData {
         'amenities': ['Khu BBQ', 'Wifi', 'Báo khí CO', 'View biển', 'Cho phép thú cưng', 'Bếp', 'Máy sấy tóc', 'Máy giặt', 'Hồ bơi', 'Bàn ủi', 'Ban công', 'Gym', 'Bàn làm việc', 'Lò sưởi trong nhà', 'Báo khói', 'Chỗ đậu xe', 'Máy lạnh', 'Ăn sáng'],
         'description': 'Khu nghỉ dưỡng mang âm hưởng kiến trúc cổ điển xen lẫn nhiệt đới, trải dài trên bãi biển Hà My.',
         'categories': ['Gần biển', 'Tiết kiệm'],
-        'latitude': 15.9221,
+        'latitude': 15.9221, // Tọa độ Điện Bàn
         'longitude': 108.3225,
         'city': 'Quảng Nam',
         'district': 'Điện Bàn',
@@ -589,7 +580,7 @@ class MockData {
         'amenities': ['Ăn sáng', 'Báo khí CO', 'Máy giặt', 'Bàn làm việc', 'View biển', 'Máy lạnh', 'Lò sưởi trong nhà', 'Hồ bơi', 'Máy sấy tóc', 'Gym', 'Ban công', 'Chỗ đậu xe', 'Bàn ủi', 'Cho phép thú cưng', 'Báo khói', 'Lò sưởi', 'Wifi'],
         'description': 'Đỉnh cao của sự xa hoa và riêng tư, The Nam Hai là một kiệt tác kiến trúc ven biển.',
         'categories': ['Siêu sang', 'Villa'],
-        'latitude': 15.9100,
+        'latitude': 15.9100, // Tọa độ Điện Bàn
         'longitude': 108.3275,
         'city': 'Quảng Nam',
         'district': 'Điện Bàn',
@@ -622,7 +613,7 @@ class MockData {
         'amenities': ['Máy lạnh', 'Bàn ủi', 'Ăn sáng', 'Wifi', 'Khu BBQ', 'Báo khí CO', 'Hồ bơi', 'Bồn tắm', 'Bàn làm việc', 'Cho phép thú cưng', 'Bếp', 'View biển', 'Lò sưởi', 'Gym', 'Báo khói', 'Máy sấy tóc', 'Ban công', 'Lò sưởi trong nhà'],
         'description': 'Khu nghỉ dưỡng lấy cảm hứng từ làng nghề lụa truyền thống của Hội An, không gian yên bình tĩnh lặng.',
         'categories': ['Văn hóa', 'Gia đình'],
-        'latitude': 15.8824,
+        'latitude': 15.8824, // Tọa độ Hội An
         'longitude': 108.3168,
         'city': 'Quảng Nam',
         'district': 'Hội An',
@@ -645,6 +636,7 @@ class MockData {
     return [
       {
         'id': 'b1',
+        'orderCode': 10001,
         'userId': 'u1',
         'propertyId': 'p1',
         'property': getMockProperties()[0],
@@ -663,6 +655,7 @@ class MockData {
       },
       {
         'id': 'b2',
+        'orderCode': 10002,
         'userId': 'u1',
         'propertyId': 'p2',
         'property': getMockProperties()[1],

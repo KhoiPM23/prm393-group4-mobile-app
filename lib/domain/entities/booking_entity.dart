@@ -4,6 +4,7 @@ enum BookingStatus { pending, confirmed, paid, cancelled, completed, failed }
 
 class BookingEntity {
   final String id;
+  final int orderCode; // MỚI: Dành cho PayOS (Numeric ID)
   final String userId;
   final String propertyId;
   final PropertyEntity property;
@@ -25,6 +26,7 @@ class BookingEntity {
 
   const BookingEntity({
     required this.id,
+    required this.orderCode,
     required this.userId,
     required this.propertyId,
     required this.property,
