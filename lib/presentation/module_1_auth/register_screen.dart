@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/firebase_user_repository.dart';
+import '../../data/repositories/mock_user_repository.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -21,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
+  final _userRepository = FirebaseUserRepository();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
@@ -31,6 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   @override
   void initState() {
     super.initState();
+    _passwordController.addListener(() => setState(() {}));
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
@@ -69,11 +73,38 @@ class _RegisterScreenState extends State<RegisterScreen>
       return;
     }
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    // TODO: Navigate to Home on success
-    Navigator.of(context).pushReplacementNamed('/home');
+    try {
+      await _userRepository.register(
+        name: _nameController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed('/home');
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      _showMessage(error.message, isError: true);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showMessage(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppTextStyles.bodyMd.copyWith(color: Colors.white),
+        ),
+        backgroundColor: isError ? AppColors.error : AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+      ),
+    );
   }
 
   @override
@@ -191,8 +222,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 if (v == null || v.isEmpty) {
                                   return 'Vui lòng nhập email';
                                 }
-                                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                                    .hasMatch(v)) {
+                                if (!MockUserRepository.isValidEmail(v)) {
                                   return 'Email không hợp lệ';
                                 }
                                 return null;
@@ -221,8 +251,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 if (v == null || v.isEmpty) {
                                   return 'Vui lòng nhập mật khẩu';
                                 }
-                                if (v.length < 8) {
-                                  return 'Mật khẩu ít nhất 8 ký tự';
+                                if (!MockUserRepository.isValidPassword(v)) {
+                                  return 'Mật khẩu ít nhất 8 ký tự và có 1 chữ cái';
                                 }
                                 return null;
                               },
@@ -270,11 +300,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                                           8),
                                   const SizedBox(height: 6),
                                   _PasswordRequirement(
-                                      label: 'Bao gồm chữ cái và chữ số',
+                                      label: 'Có ít nhất 1 chữ cái',
                                       isMet: RegExp(r'[a-zA-Z]').hasMatch(
-                                              _passwordController.text) &&
-                                          RegExp(r'[0-9]').hasMatch(
-                                              _passwordController.text)),
+                                          _passwordController.text)),
                                 ],
                               ),
                             ),
