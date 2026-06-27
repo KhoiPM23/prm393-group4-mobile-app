@@ -253,10 +253,15 @@ class _BookingConfirmScreenState extends State<BookingConfirmScreen> with Widget
       _isWaitingForPayment = true;
     });
 
+    String description = 'Thanh toan ${_room?.title ?? _property!.title}';
+    description = description.length > 25
+        ? description.substring(0, 25)
+        : description;
+
     final success = await _payOSRepository.createPayment(
       orderCode: orderCode,
       amount: _total,
-      description: 'Thanh toan ${_room?.title ?? _property!.title}',
+      description: description,
     );
 
     if (!mounted) return;
