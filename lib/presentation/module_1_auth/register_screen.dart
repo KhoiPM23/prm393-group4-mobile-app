@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../data/repositories/firebase_user_repository.dart';
-import '../../data/repositories/mock_user_repository.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -222,7 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 if (v == null || v.isEmpty) {
                                   return 'Vui lòng nhập email';
                                 }
-                                if (!MockUserRepository.isValidEmail(v)) {
+                                if (!FirebaseUserRepository.isValidEmail(v)) {
                                   return 'Email không hợp lệ';
                                 }
                                 return null;
@@ -251,7 +250,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 if (v == null || v.isEmpty) {
                                   return 'Vui lòng nhập mật khẩu';
                                 }
-                                if (!MockUserRepository.isValidPassword(v)) {
+                                if (!FirebaseUserRepository.isValidPassword(v)) {
                                   return 'Mật khẩu ít nhất 8 ký tự và có 1 chữ cái';
                                 }
                                 return null;

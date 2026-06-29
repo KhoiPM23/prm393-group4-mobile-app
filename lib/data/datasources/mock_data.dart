@@ -1,17 +1,4 @@
 class MockData {
-  static List<Map<String, dynamic>> getMockUsers() {
-    return [
-      {
-        'id': 'u1',
-        'name': 'Phan Minh Khôi',
-        'email': 'khoi.phan@email.com',
-        'password': 'khoi1234',
-        'avatarUrl':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
-      }
-    ];
-  }
-
   static List<Map<String, dynamic>> getMockProperties() {
     return [
       {
