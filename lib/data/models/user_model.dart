@@ -1,5 +1,4 @@
 import '../../domain/entities/user_entity.dart';
-import '../datasources/mock_data.dart';
 
 class UserModel extends UserEntity {
   const UserModel({
@@ -16,11 +15,5 @@ class UserModel extends UserEntity {
       email: json['email'] as String,
       avatarUrl: json['avatarUrl'] as String,
     );
-  }
-
-  // Factory method trả về dữ liệu mẫu (Hardcoded in MockData)
-  static UserModel mockDetailed() {
-    final data = MockData.getMockUsers().first;
-    return UserModel.fromJson(data);
   }
 }

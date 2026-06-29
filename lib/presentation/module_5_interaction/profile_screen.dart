@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -216,6 +217,12 @@ class _ProfileAppBar extends StatelessWidget {
 class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final displayName = user?.displayName?.trim().isNotEmpty == true
+        ? user!.displayName!.trim()
+        : 'VibeLocals User';
+    final email = user?.email ?? 'Dang nhap bang Firebase';
+
     return Container(
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
@@ -280,14 +287,14 @@ class _ProfileCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Phan Minh Khôi',
+            displayName,
             style: AppTextStyles.headlineLgMobile.copyWith(
               color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'khoi.phan@email.com',
+            email,
             style: AppTextStyles.bodyMd.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
