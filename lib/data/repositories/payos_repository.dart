@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 class PayOSRepository {
   final Dio _dio = Dio();
+  String? lastError;
   
   // URL Server Render của bạn
   static const String _baseUrl = 'https://payos-backend-egnf.onrender.com';
@@ -44,8 +45,24 @@ class PayOSRepository {
         }
       }
       return false;
-    } catch (e) {
-      debugPrint('Lỗi PayOSRepository: $e');
+    } on DioException catch (e) {
+      lastError = e.response?.data.toString() ?? e.message ?? e.toString();
+
+      debugPrint('========== PayOS ERROR ==========');
+      debugPrint('Status Code: ${e.response?.statusCode}');
+      debugPrint('Response: ${e.response?.data}');
+      debugPrint('Message: ${e.message}');
+      debugPrint('=================================');
+
+      return false;
+    } catch (e, s) {
+      lastError = e.toString();
+
+      debugPrint('========== UNKNOWN ERROR ==========');
+      debugPrint(lastError);
+      debugPrint(s.toString());
+      debugPrint('===================================');
+
       return false;
     }
   }
