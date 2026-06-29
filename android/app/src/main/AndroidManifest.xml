@@ -52,12 +52,10 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-    </queries>
-    <!-- FIX DẪN ĐƯỜNG: Cấp quyền cho url_launcher truy vấn và kích hoạt ứng dụng Google Maps native trên máy Android -->
-    <queries>
+
         <intent>
-            <action android:name="android.view.Intent.ACTION_VIEW" />
-            <data android:scheme="https" />
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>
