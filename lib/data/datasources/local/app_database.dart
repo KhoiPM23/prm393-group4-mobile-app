@@ -243,6 +243,27 @@ class AppDatabase extends _$AppDatabase {
       return isPropertyInAlbum(album.id, propertyId);
     });
   }
+
+  /// Stream reactive trả về Set<String> tất cả propertyId đang được yêu thích
+  /// trong album mặc định. Tự động emit mỗi khi wishlist_items thay đổi.
+  Stream<Set<String>> watchDefaultAlbumPropertyIds() {
+    final query = select(wishlistItems).join([
+      innerJoin(
+        wishlistAlbums,
+        wishlistAlbums.id.equalsExp(wishlistItems.albumId),
+      ),
+    ])
+      ..where(wishlistAlbums.isDefault.equals(true));
+
+    return query.watch().map((rows) {
+      final Set<String> ids = {};
+      for (final r in rows) {
+        final id = r.read(wishlistItems.propertyId);
+        if (id != null) ids.add(id);
+      }
+      return ids;
+    });
+  }
 }
 
 // ─────────────────────────────────────────────
