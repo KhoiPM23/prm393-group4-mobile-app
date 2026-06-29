@@ -83,6 +83,19 @@ class VibeLocalsApp extends StatelessWidget {
       },
       // Page transition builder for smooth navigation
       onGenerateRoute: (settings) {
+        // CHẶN ĐỨNG PHANTOM PUSH: Nếu là link quay lại từ PayOS, không cho đẩy Login đè lên
+        if (settings.name != null && settings.name!.contains('payment-success')) {
+          return PageRouteBuilder(
+            opaque: false,
+            pageBuilder: (context, _, __) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (Navigator.canPop(context)) Navigator.of(context).pop();
+              });
+              return const SizedBox.shrink();
+            },
+          );
+        }
+
         // Fallback for any undefined routes
         return MaterialPageRoute(
           builder: (_) => const LoginScreen(),
