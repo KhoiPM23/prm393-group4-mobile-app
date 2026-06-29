@@ -46,4 +46,10 @@ class MockPropertyRepository implements PropertyRepository {
     }
     return results;
   }
+
+  @override
+  Future<List<PropertyEntity>> getPropertiesByHost(String hostId) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    return PropertyModel.mockList().where((p) => p.hostId == hostId).toList();
+  }
 }

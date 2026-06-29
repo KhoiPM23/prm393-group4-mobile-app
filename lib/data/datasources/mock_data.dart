@@ -8,11 +8,25 @@ class MockData {
         'password': 'khoi1234',
         'avatarUrl':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
+        'role': 'customer',
+      },
+      {
+        'id': 'host1',
+        'name': 'Lâm Nguyễn',
+        'email': 'lam.host@email.com',
+        'password': 'lamnguyen1234',
+        'avatarUrl':
+        'https://lh3.googleusercontent.com/aida-public/AB6AXuBwozORqRy0O4Jg0TBxrG_D6N3cIOgy3QVCi5nqyUsrlCrldx4OJuoP7vcVwlRvyD1iY4DBw79n7YMUFxdMll8ADpkbvnWLG2hQFRoHyaix7uQttYYfeJG27-RsDGfpo3bFFpKikKR0HCMg2a8xSD9vg1BfEwCuGUxtMWsOWaoOKV2xaCAfAt1Gm_94HhQ7i6_NIaXirssgN6s4ww9LrGBpOkOsr7QvRpDWqcjyWJq6xCiifR8U9_9qJ9n2_jEoxxFF9lMgKz42wG0',
+        'role': 'host',
       }
     ];
   }
 
   static List<Map<String, dynamic>> getMockProperties() {
+    const hostId = 'host1';
+    const hostName = 'Lâm Nguyễn';
+    const hostAvatar = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBwozORqRy0O4Jg0TBxrG_D6N3cIOgy3QVCi5nqyUsrlCrldx4OJuoP7vcVwlRvyD1iY4DBw79n7YMUFxdMll8ADpkbvnWLG2hQFRoHyaix7uQttYYfeJG27-RsDGfpo3bFFpKikKR0HCMg2a8xSD9vg1BfEwCuGUxtMWsOWaoOKV2xaCAfAt1Gm_94HhQ7i6_NIaXirssgN6s4ww9LrGBpOkOsr7QvRpDWqcjyWJq6xCiifR8U9_9qJ9n2_jEoxxFF9lMsgKz42wG0';
+
     return [
       {
         'id': 'p1',
@@ -21,15 +35,13 @@ class MockData {
         'pricePerNight': 1850000.0,
         'rating': 4.9,
         'reviewsCount': 128,
-        'hostName': 'Minh Khôi',
-        'hostAvatar':
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
+        'hostId': hostId,
+        'hostName': hostName,
+        'hostAvatar': hostAvatar,
         'imageUrls': [
           'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
           'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688',
           'https://images.unsplash.com/photo-1493809842364-78817add7ffb',
-          'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2',
-          'https://images.unsplash.com/photo-1484154218962-a197022b5858',
         ],
         'amenities': ['Khu BBQ', 'Báo khí CO', 'Lò sưởi trong nhà', 'Ban công', 'Cho phép thú cưng', 'Bồn tắm', 'Máy sấy tóc', 'Ăn sáng', 'View biển', 'Wifi', 'Bếp', 'Hồ bơi', 'Chỗ đậu xe', 'Máy lạnh', 'Bàn ủi', 'Lò sưởi', 'Máy giặt'],
         'description':
@@ -112,7 +124,8 @@ class MockData {
         'pricePerNight': 1200000.0,
         'rating': 4.7,
         'reviewsCount': 42,
-        'hostName': 'Minh Khôi',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
         'imageUrls': [
@@ -147,7 +160,8 @@ class MockData {
         'pricePerNight': 1950000.0,
         'rating': 4.9,
         'reviewsCount': 85,
-        'hostName': 'Tuấn Anh',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuBwozORqRy0O4Jg0TBxrG_D6N3cIOgy3QVCi5nqyUsrlCrldx4OJuoP7vcVwlRvyD1iY4DBw79n7YMUFxdMll8ADpkbvnWLG2hQFRoHyaix7uQttYYfeJG27-RsDGfpo3bFFpKikKR0HCMg2a8xSD9vg1BfEwCuGUxtMWsOWaoOKV2xaCAfAt1Gm_94HhQ7i6_NIaXirssgN6s4ww9LrGBpOkOsr7QvRpDWqcjyWJq6xCiifR8U9_9qJ9n2_jEoxxFF9lMgKz42wG0',
         'imageUrls': [
@@ -183,7 +197,8 @@ class MockData {
         'pricePerNight': 1350000.0,
         'rating': 4.6,
         'reviewsCount': 112,
-        'hostName': 'Hoàng Nam',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
         'imageUrls': [
@@ -216,7 +231,8 @@ class MockData {
         'pricePerNight': 950000.0,
         'rating': 4.5,
         'reviewsCount': 54,
-        'hostName': 'Phương Thảo',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuBwozORqRy0O4Jg0TBxrG_D6N3cIOgy3QVCi5nqyUsrlCrldx4OJuoP7vcVwlRvyD1iY4DBw79n7YMUFxdMll8ADpkbvnWLG2hQFRoHyaix7uQttYYfeJG27-RsDGfpo3bFFpKikKR0HCMg2a8xSD9vg1BfEwCuGUxtMWsOWaoOKV2xaCAfAt1Gm_94HhQ7i6_NIaXirssgN6s4ww9LrGBpOkOsr7QvRpDWqcjyWJq6xCiifR8U9_9qJ9n2_jEoxxFF9lMgKz42wG0',
         'imageUrls': [
@@ -249,7 +265,8 @@ class MockData {
         'pricePerNight': 1600000.0,
         'rating': 4.8,
         'reviewsCount': 73,
-        'hostName': 'Quốc Bảo',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
         'imageUrls': [
@@ -282,7 +299,8 @@ class MockData {
         'pricePerNight': 2200000.0,
         'rating': 4.7,
         'reviewsCount': 29,
-        'hostName': 'Minh Khôi',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
         'imageUrls': [
@@ -315,7 +333,8 @@ class MockData {
         'pricePerNight': 3500000.0,
         'rating': 4.9,
         'reviewsCount': 210,
-        'hostName': 'Shilla Group',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar': 'https://images.unsplash.com/photo-1560250097-0b93528c311a',
         'imageUrls': [
           'https://images.unsplash.com/photo-1582719508461-905c673771fd',
@@ -348,7 +367,8 @@ class MockData {
         'pricePerNight': 4500000.0,
         'rating': 4.8,
         'reviewsCount': 345,
-        'hostName': 'Naman',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2',
         'imageUrls': [
           'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
@@ -381,7 +401,8 @@ class MockData {
         'pricePerNight': 3800000.0,
         'rating': 4.7,
         'reviewsCount': 512,
-        'hostName': 'Furama',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar': 'https://images.unsplash.com/photo-1566492031773-4f4e44671857',
         'imageUrls': [
           'https://images.unsplash.com/photo-1566073771259-6a8506099945',
@@ -414,7 +435,8 @@ class MockData {
         'pricePerNight': 4200000.0,
         'rating': 4.9,
         'reviewsCount': 420,
-        'hostName': 'Hyatt',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar': 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79',
         'imageUrls': [
           'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6',
@@ -447,7 +469,8 @@ class MockData {
         'pricePerNight': 3200000.0,
         'rating': 4.6,
         'reviewsCount': 289,
-        'hostName': 'Melia',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar': 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e',
         'imageUrls': [
           'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b',
@@ -480,7 +503,8 @@ class MockData {
         'pricePerNight': 6500000.0,
         'rating': 4.8,
         'reviewsCount': 310,
-        'hostName': 'Vinpearl',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar': 'https://images.unsplash.com/photo-1560250097-0b93528c311a',
         'imageUrls': [
           'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
@@ -513,7 +537,8 @@ class MockData {
         'pricePerNight': 2800000.0,
         'rating': 4.5,
         'reviewsCount': 175,
-        'hostName': 'Grandvrio',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2',
         'imageUrls': [
           'https://images.unsplash.com/photo-1571896349842-33c89424de2d',
@@ -546,7 +571,8 @@ class MockData {
         'pricePerNight': 1500000.0,
         'rating': 4.3,
         'reviewsCount': 112,
-        'hostName': 'Belhamy',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar': 'https://images.unsplash.com/photo-1566492031773-4f4e44671857',
         'imageUrls': [
           'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2',
@@ -579,7 +605,8 @@ class MockData {
         'pricePerNight': 9500000.0,
         'rating': 5.0,
         'reviewsCount': 620,
-        'hostName': 'Four Seasons',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar': 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79',
         'imageUrls': [
           'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b',
@@ -612,7 +639,8 @@ class MockData {
         'pricePerNight': 1200000.0,
         'rating': 4.6,
         'reviewsCount': 185,
-        'hostName': 'Làng Lụa',
+        'hostId': hostId,
+        'hostName': hostName,
         'hostAvatar': 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e',
         'imageUrls': [
           'https://images.unsplash.com/photo-1540518614846-7eded433c457',
@@ -641,67 +669,6 @@ class MockData {
     ];
   }
 
-  static List<Map<String, dynamic>> getMockBookings() {
-    return [
-      {
-        'id': 'b1',
-        'userId': 'u1',
-        'propertyId': 'p1',
-        'property': getMockProperties()[0],
-        'checkIn': '2026-10-12T14:00:00Z',
-        'checkOut': '2026-10-15T12:00:00Z',
-        'guests': 2,
-        'basePrice': 1850000.0,
-        'serviceFee': 150000.0,
-        'tax': 185000.0,
-        'discountAmount': 0.0,
-        'totalPrice': 5885000.0,
-        'status': 'confirmed',
-        'updatedAt': '2026-10-10T10:00:00Z',
-        'paymentMethod': 'MoMo',
-        'transactionId': 'TRX-999-001',
-      },
-      {
-        'id': 'b2',
-        'userId': 'u1',
-        'propertyId': 'p2',
-        'property': getMockProperties()[1],
-        'checkIn': '2026-08-05T14:00:00Z',
-        'checkOut': '2026-08-08T12:00:00Z',
-        'guests': 4,
-        'basePrice': 2500000.0,
-        'serviceFee': 200000.0,
-        'tax': 250000.0,
-        'discountAmount': 500000.0,
-        'totalPrice': 7450000.0,
-        'status': 'completed',
-        'updatedAt': '2026-08-09T09:00:00Z',
-        'paymentMethod': 'Bank Transfer',
-        'transactionId': 'TRX-888-002',
-      }
-    ];
-  }
-
-  static List<Map<String, dynamic>> getMockMessages() {
-    return [
-      {
-        'id': 'm1',
-        'senderId': 'host1',
-        'receiverId': 'u1',
-        'content':
-            'Chào bạn! Tôi là Lâm. Cảm ơn bạn đã đặt phòng. Tôi có thể giúp gì cho bạn không?',
-        'timestamp': '2026-06-16T14:20:00Z',
-        'isRead': true,
-      },
-      {
-        'id': 'm2',
-        'senderId': 'u1',
-        'receiverId': 'host1',
-        'content':
-            'Chào Lâm, mình muốn hỏi nhà mình có thể nhận phòng sớm được không ạ?',
-        'timestamp': '2026-06-16T14:22:00Z',
-        'isRead': true,
-      }
-    ];
-  }
+  static List<Map<String, dynamic>> getMockBookings() => [];
+  static List<Map<String, dynamic>> getMockMessages() => [];
 }

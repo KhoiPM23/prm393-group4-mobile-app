@@ -8,6 +8,8 @@ import '../widgets/vibe_bottom_nav_bar.dart';
 import '../blocs/home/home_bloc.dart';
 import '../blocs/home/home_event.dart';
 import '../blocs/home/home_state.dart';
+import '../blocs/auth/auth_bloc.dart';
+import '../blocs/auth/auth_state.dart';
 import '../../data/repositories/mock_property_repository.dart';
 import 'search_screen.dart';
 
@@ -43,17 +45,21 @@ class _HomeScreenState extends State<HomeScreen> {
   // We will load properties via BLoC now, so we removed the hardcoded _properties list.
 
   void _onNavTap(int index) {
+    if (_currentNavIndex == index) return;
     setState(() => _currentNavIndex = index);
     switch (index) {
       case 0:
-        break; // Already home
+        break; // Home
       case 1:
         Navigator.of(context).pushNamed('/explore');
         break;
       case 2:
-        Navigator.of(context).pushNamed('/profile');
+        Navigator.of(context).pushNamed('/profile'); // Trips placeholder
         break;
       case 3:
+        Navigator.of(context).pushNamed('/inbox');
+        break;
+      case 4:
         Navigator.of(context).pushNamed('/profile');
         break;
     }
@@ -226,9 +232,21 @@ class _HomeScreenState extends State<HomeScreen> {
             top: 0,
             left: 0,
             right: 0,
-            child: _GlassTopBar(
-              onNotificationTap: () =>
-                  Navigator.of(context).pushNamed('/notifications'),
+            child: BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                String? avatarUrl;
+                String name = 'Khách';
+                if (state is Authenticated) {
+                  avatarUrl = state.user.avatarUrl;
+                  name = state.user.name;
+                }
+                return _GlassTopBar(
+                  avatarUrl: avatarUrl,
+                  userName: name,
+                  onNotificationTap: () =>
+                      Navigator.of(context).pushNamed('/notifications'),
+                );
+              },
             ),
           ),
           // Bottom Nav
@@ -252,8 +270,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _GlassTopBar extends StatelessWidget {
   final VoidCallback? onNotificationTap;
+  final String? avatarUrl;
+  final String userName;
 
-  const _GlassTopBar({this.onNotificationTap});
+  const _GlassTopBar({
+    this.onNotificationTap,
+    this.avatarUrl,
+    required this.userName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -285,12 +309,15 @@ class _GlassTopBar extends StatelessWidget {
                   color: AppColors.surfaceContainerHigh,
                 ),
                 child: ClipOval(
-                  child: Image.network(
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuAyXQVi4kCgu64-9fLx1TbULWLiGDvdv6KK0OLOyLqt4eEq1NyxryQnhF1D8PS4g6pYod5TOO-fj7ANWmmluIv4ADw7WVityaX1KuM289PANHYFFCz55mz9nSmHJtLqcNKCOcvUD-y0afjrJVHy-ev4qzBsKAf0THV1s7VPMkloTJGwiGN6TLcrummkQfOruTdP8lu7xtBPh57Bomhz2u-B3PYtbIDb3MyddDrDZXinW8XURCuHbPY0cvoqpcuIMWuKUuiBUusa2BI',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.person, color: AppColors.outline),
-                  ),
+                  child: avatarUrl != null && avatarUrl!.isNotEmpty
+                      ? Image.network(
+                          avatarUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(
+                              Icons.person,
+                              color: AppColors.outline),
+                        )
+                      : const Icon(Icons.person, color: AppColors.outline),
                 ),
               ),
               const SizedBox(width: 12),
@@ -307,7 +334,7 @@ class _GlassTopBar extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Chào buổi sáng!',
+                    'Chào $userName!',
                     style: AppTextStyles.labelMd.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
