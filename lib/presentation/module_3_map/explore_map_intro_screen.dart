@@ -368,6 +368,58 @@ class _ExploreMapIntroScreenState extends State<ExploreMapIntroScreen> {
     });
   }
 
+  Widget _buildSearchBarUI() {
+    return Padding(
+      padding: EdgeInsets.only(
+          top: _isSearchingActive ? 16 : 8,
+          left: 24,
+          right: 24,
+          bottom: 16),
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+            color: _isSearchingActive ? Colors.white : Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(32),
+            border: _isSearchingActive 
+                ? Border.all(color: Colors.black87, width: 1.5)
+                : null,
+            boxShadow: const []),
+        child: Row(
+          children: [
+            const Icon(Icons.search, color: Colors.black87, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                onChanged: _onSearchChanged,
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w500),
+                decoration: InputDecoration(
+                  hintText: 'Tìm kiếm điểm đến',
+                  hintStyle: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontWeight: FontWeight.w400),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+            if (_searchController.text.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.close,
+                    size: 20, color: Colors.black54),
+                onPressed: () {
+                  _searchController.clear();
+                  _onSearchChanged('');
+                },
+              )
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildWhereExpanded() {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -402,61 +454,18 @@ class _ExploreMapIntroScreenState extends State<ExploreMapIntroScreen> {
               ),
             ),
 
-          // Sticky Search Bar
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _StickySearchBarDelegate(
-              child: Padding(
-                padding: EdgeInsets.only(
-                    top: _isSearchingActive ? 16 : 8,
-                    left: 24,
-                    right: 24,
-                    bottom: 16),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  decoration: BoxDecoration(
-                      color: _isSearchingActive ? Colors.white : Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(32),
-                      border: _isSearchingActive 
-                          ? Border.all(color: Colors.black87, width: 1.5)
-                          : null,
-                      boxShadow: const []),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.search, color: Colors.black87, size: 24),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          focusNode: _searchFocusNode,
-                          onChanged: _onSearchChanged,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                          decoration: InputDecoration(
-                            hintText: 'Tìm kiếm điểm đến',
-                            hintStyle: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontWeight: FontWeight.w400),
-                            border: InputBorder.none,
-                          ),
-                        ),
-                      ),
-                      if (_searchController.text.isNotEmpty)
-                        IconButton(
-                          icon: const Icon(Icons.close,
-                              size: 20, color: Colors.black54),
-                          onPressed: () {
-                            _searchController.clear();
-                            _onSearchChanged('');
-                          },
-                        )
-                    ],
-                  ),
-                ),
+          // Search Bar (Sticky only when searching)
+          if (_isSearchingActive)
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickySearchBarDelegate(
+                child: _buildSearchBarUI(),
               ),
+            )
+          else
+            SliverToBoxAdapter(
+              child: _buildSearchBarUI(),
             ),
-          ),
 
           if (!_isLoadingCities && _recentSearch != null)
             SliverToBoxAdapter(
