@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../domain/entities/property_entity.dart';
 import '../../data/models/property_model.dart';
+import '../module_2_explore/cubit/wishlist_cubit.dart';
 import '../widgets/vibe_cards.dart';
 import '../widgets/vibe_ui_components.dart';
 
@@ -18,7 +20,6 @@ class PropertyDetailScreen extends StatefulWidget {
 }
 
 class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
-  bool _isFavorite = true;
   late ScrollController _scrollController;
   bool _showNavBg = false;
   PropertyEntity? _property;
@@ -204,13 +205,15 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                         icon: Icons.arrow_back,
                         onTap: () => Navigator.of(context).pop(),
                       ),
-                      _OverlayButton(
-                        icon: _isFavorite
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        iconColor:
-                            _isFavorite ? AppColors.error : AppColors.onSurface,
-                        onTap: () => setState(() => _isFavorite = !_isFavorite),
+                      BlocBuilder<WishlistCubit, Set<String>>(
+                        builder: (context, favoriteIds) {
+                          final isFavorite = favoriteIds.contains(p.id);
+                          return _OverlayButton(
+                            icon: isFavorite ? Icons.favorite : Icons.favorite_border,
+                            iconColor: isFavorite ? AppColors.error : AppColors.onSurface,
+                            onTap: () => context.read<WishlistCubit>().toggleFavorite(p.id),
+                          );
+                        },
                       ),
                     ],
                   ),

@@ -9,14 +9,13 @@ import '../blocs/home/home_bloc.dart';
 import '../blocs/home/home_event.dart';
 import '../blocs/home/home_state.dart';
 import '../../data/repositories/mock_property_repository.dart';
-import 'search_screen.dart';
+import 'cubit/wishlist_cubit.dart';
 
 /// Màn hình Trang chủ VibeLocals
 /// Route: /home
-/// Source: trang_ch_vibelocals/code.html
 /// Design:
 ///   - Fixed glassmorphic TopAppBar (logo + profile + notifications bell)
-///   - Pill search bar + filter button
+///   - Pill search bar → mở bản đồ (/explore)
 ///   - Horizontal category scroll (Xu hướng, Gần biển, Vùng núi, Độc đáo, Di sản)
 ///   - Vertical property list (PropertyCard)
 ///   - Glassmorphic BottomNavBar
@@ -40,15 +39,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _Category(icon: Icons.castle_outlined, label: 'Di sản'),
   ];
 
-  // We will load properties via BLoC now, so we removed the hardcoded _properties list.
-
   void _onNavTap(int index) {
     setState(() => _currentNavIndex = index);
     switch (index) {
       case 0:
         break; // Already home
       case 1:
-        Navigator.of(context).pushNamed('/explore');
+        Navigator.of(context).pushNamed('/wishlist');
         break;
       case 2:
         Navigator.of(context).pushNamed('/profile');
@@ -90,22 +87,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
                   child: _SearchBar(
                     controller: _searchController,
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => const SearchScreen(),
-                      ));
-                    },
-                    onSubmitted: (query) {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => SearchScreen(initialQuery: query),
-                      ));
-                    },
-                    onFilterTap: () {
-                      // Navigate to search screen then user can filter there
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => const SearchScreen(),
-                      ));
-                    },
+                    onTap: () => Navigator.of(context).pushNamed('/explore'),
+                    onSubmitted: (_) => Navigator.of(context).pushNamed('/explore'),
+                    onFilterTap: () => Navigator.of(context).pushNamed('/explore'),
                   ),
                 ),
               ),
@@ -198,17 +182,21 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: AppSpacing.xxl),
                         itemBuilder: (context, i) {
                           final p = properties[i];
-                          // Format price to VND
                           final formattedPrice = '${p.pricePerNight.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
-                          
-                          return PropertyCard(
-                            title: p.title,
-                            location: p.location,
-                            priceText: formattedPrice,
-                            rating: p.rating,
-                            imageUrl: p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
-                            onTap: () =>
-                                Navigator.of(context).pushNamed('/property-detail', arguments: p),
+
+                          return BlocBuilder<WishlistCubit, Set<String>>(
+                            builder: (context, favoriteIds) => PropertyCard(
+                              title: p.title,
+                              location: p.location,
+                              priceText: formattedPrice,
+                              rating: p.rating,
+                              imageUrl: p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
+                              isFavorite: favoriteIds.contains(p.id),
+                              onFavoriteToggle: () =>
+                                  context.read<WishlistCubit>().toggleFavorite(p.id),
+                              onTap: () =>
+                                  Navigator.of(context).pushNamed('/property-detail', arguments: p),
+                            ),
                           );
                         },
                       ),

@@ -54,4 +54,8 @@ abstract class WishlistRepository {
   /// Stream lắng nghe trạng thái yêu thích (trong album mặc định) của một chỗ nghỉ.
   /// Dùng để cập nhật icon trái tim trên PropertyCard theo thời gian thực.
   Stream<bool> watchIsPropertyInDefaultAlbum(String propertyId);
+
+  /// Stream trả về tập hợp tất cả propertyId đang được yêu thích trong album mặc định.
+  /// Dùng để render danh sách — so khớp batch thay vì query riêng từng item.
+  Stream<Set<String>> watchDefaultAlbumPropertyIds();
 }
