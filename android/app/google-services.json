@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "992573755019-3r2qk6cdq699jh8u59teb5jt7snh2goe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hotelbookingapp",
+            "certificate_hash": "6e0fca1860b09be9d287bb8be7a659159a3ec11e"
+          }
+        },
+        {
           "client_id": "992573755019-bi0pvjkpg0a18qfbhegbo2punhp6biob.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
