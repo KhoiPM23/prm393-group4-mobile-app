@@ -37,40 +37,50 @@ class VibeBottomNavBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _NavItem(
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home,
-                label: 'Trang chủ',
-                isActive: currentIndex == 0,
-                onTap: () => onTap(0),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home,
+                  label: 'Trang chủ',
+                  isActive: currentIndex == 0,
+                  onTap: () => onTap(0),
+                ),
               ),
-              _NavItem(
-                icon: Icons.favorite_border,
-                activeIcon: Icons.favorite,
-                label: 'Yêu thích',
-                isActive: currentIndex == 1,
-                onTap: () => onTap(1),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.favorite_border,
+                  activeIcon: Icons.favorite,
+                  label: 'Yêu thích',
+                  isActive: currentIndex == 1,
+                  onTap: () => onTap(1),
+                ),
               ),
-              _NavItem(
-                icon: Icons.luggage_outlined,
-                activeIcon: Icons.luggage,
-                label: 'Chuyến đi',
-                isActive: currentIndex == 2,
-                onTap: () => onTap(2),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.map_outlined,
+                  activeIcon: Icons.map,
+                  label: 'Bản đồ',
+                  isActive: currentIndex == 2,
+                  onTap: () => onTap(2),
+                ),
               ),
-              _NavItem(
-                icon: Icons.chat_bubble_outline,
-                activeIcon: Icons.chat_bubble,
-                label: 'Tin nhắn',
-                isActive: currentIndex == 3,
-                onTap: () => onTap(3),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.chat_bubble_outline,
+                  activeIcon: Icons.chat_bubble,
+                  label: 'Tin nhắn',
+                  isActive: currentIndex == 3,
+                  onTap: () => onTap(3),
+                ),
               ),
-              _NavItem(
-                icon: Icons.person_outline,
-                activeIcon: Icons.person,
-                label: 'Hồ sơ',
-                isActive: currentIndex == 4,
-                onTap: () => onTap(4),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  label: 'Hồ sơ',
+                  isActive: currentIndex == 4,
+                  onTap: () => onTap(4),
+                ),
               ),
             ],
           ),
@@ -103,7 +113,7 @@ class _NavItem extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         decoration: isActive
             ? BoxDecoration(
                 color: AppColors.secondaryContainer,
@@ -121,13 +131,17 @@ class _NavItem extends StatelessWidget {
               size: 24,
             ),
             const SizedBox(height: 2),
-            Text(
-              label,
-              style: AppTextStyles.labelMd.copyWith(
-                color: isActive
-                    ? AppColors.onSecondaryContainer
-                    : AppColors.onSurfaceVariant,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                style: AppTextStyles.labelMd.copyWith(
+                  color: isActive
+                      ? AppColors.onSecondaryContainer
+                      : AppColors.onSurfaceVariant,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  fontSize: 11,
+                ),
               ),
             ),
           ],

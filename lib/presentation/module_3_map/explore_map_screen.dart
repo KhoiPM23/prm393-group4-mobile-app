@@ -24,6 +24,7 @@ import 'widgets/price_filter_modal.dart';
 import 'widgets/price_marker.dart';
 import 'widgets/property_card.dart';
 import 'widgets/user_location_beacon.dart';
+import '../module_2_explore/cubit/wishlist_cubit.dart';
 
 class ExploreMapScreen extends StatefulWidget {
   final String? city;
@@ -156,9 +157,10 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
   void _onNavTap(int index) {
     setState(() => _currentNavIndex = index);
     if (index == 0) Navigator.of(context).pushReplacementNamed('/home');
-    if (index == 2 || index == 3) {
-      Navigator.of(context).pushReplacementNamed('/profile');
-    }
+    if (index == 1) Navigator.of(context).pushReplacementNamed('/wishlist');
+    // index 2 is Map (already here), we could do nothing or pop to intro. We'll do nothing.
+    if (index == 3) Navigator.of(context).pushReplacementNamed('/chat');
+    if (index == 4) Navigator.of(context).pushReplacementNamed('/profile');
   }
 
   void _updateViewportBounds(bool isGesture) {
@@ -374,7 +376,7 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                           return Marker(
                             point:
                                 LatLng(property.latitude, property.longitude),
-                            width: 75,
+                            width: 120,
                             height: 42,
                             alignment: Alignment.center,
                             child: GestureDetector(
@@ -385,10 +387,15 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                     .read<MapBloc>()
                                     .add(MapMarkerSelected(property.id));
                               },
-                              child: PriceMarker(
-                                  price:
-                                      '${(property.pricePerNight / 1000000).toStringAsFixed(1)}M',
-                                  isActive: isActive),
+                              child: BlocBuilder<WishlistCubit, Set<String>>(
+                                builder: (context, favoriteIds) {
+                                  return PriceMarker(
+                                    price: '${(property.pricePerNight / 1000000).toStringAsFixed(1)}M',
+                                    isActive: isActive,
+                                    isFavorite: favoriteIds.contains(property.id),
+                                  );
+                                },
+                              ),
                             ),
                           );
                         }).toList(),
@@ -897,16 +904,19 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                       return Padding(
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 16),
-                                        child: PropertyPreviewCard(
-                                          property: state.selectedProperty!,
-                                          distance: _calculateDistance(
-                                            LatLng(
-                                                state
-                                                    .selectedProperty!.latitude,
-                                                state.selectedProperty!
-                                                    .longitude),
-                                            state.userLocation,
-                                          ),
+                                        child: BlocBuilder<WishlistCubit, Set<String>>(
+                                          builder: (context, favoriteIds) => PropertyPreviewCard(
+                                            property: state.selectedProperty!,
+                                            isFavorite: favoriteIds.contains(state.selectedProperty!.id),
+                                            onFavoriteToggle: () => context.read<WishlistCubit>().toggleFavorite(state.selectedProperty!.id),
+                                            distance: _calculateDistance(
+                                              LatLng(
+                                                  state
+                                                      .selectedProperty!.latitude,
+                                                  state.selectedProperty!
+                                                      .longitude),
+                                              state.userLocation,
+                                            ),
                                           actionButton: ElevatedButton.icon(
                                             onPressed: () =>
                                                 _launchGoogleMapsNavigation(
@@ -958,7 +968,8 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                                     fontSize: 13)),
                                           ),
                                         ),
-                                      );
+                                      ),
+                                    );
                                     }
 
                                     // XỬ LÝ CHẾ ĐỘ DANH SÁCH (LIST)
@@ -1033,13 +1044,16 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                                   .read<MapBloc>()
                                                   .add(MapMarkerSelected(
                                                       property.id)),
-                                              child: PropertyPreviewCard(
-                                                property: property,
-                                                distance: _calculateDistance(
-                                                  LatLng(property.latitude,
-                                                      property.longitude),
-                                                  state.userLocation,
-                                                ),
+                                              child: BlocBuilder<WishlistCubit, Set<String>>(
+                                                builder: (context, favoriteIds) => PropertyPreviewCard(
+                                                  property: property,
+                                                  isFavorite: favoriteIds.contains(property.id),
+                                                  onFavoriteToggle: () => context.read<WishlistCubit>().toggleFavorite(property.id),
+                                                  distance: _calculateDistance(
+                                                    LatLng(property.latitude,
+                                                        property.longitude),
+                                                    state.userLocation,
+                                                  ),
                                                 actionButton: OutlinedButton(
                                                   onPressed: () => Navigator.of(
                                                           context)
@@ -1075,7 +1089,8 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                             ),
                                           ),
                                         ),
-                                      );
+                                      ),
+                                    );
                                     }
 
                                     return ValueListenableBuilder<double>(
@@ -1148,7 +1163,7 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
         : (widget.city ?? 'Mọi nơi');
     String dateText = widget.dates != null
         ? '${widget.dates!.start.day}-${widget.dates!.end.day} Thg ${widget.dates!.start.month}'
-        : 'Bất kỳ tuần nào';
+        : 'Bất kỳ lúc nào';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 class PriceMarker extends StatefulWidget {
   final String price;
   final bool isActive;
-  const PriceMarker({super.key, required this.price, required this.isActive});
+  final bool isFavorite;
+  const PriceMarker({super.key, required this.price, required this.isActive, this.isFavorite = false});
 
   @override
   State<PriceMarker> createState() => _PriceMarkerState();
@@ -72,8 +73,8 @@ class _PriceMarkerState extends State<PriceMarker>
                 painter: _RipplePainter(animation: _rippleCtrl),
               ),
             Container(
-              width: 70,
               height: 32,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 color: widget.isActive ? Colors.black : Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -90,15 +91,24 @@ class _PriceMarkerState extends State<PriceMarker>
                   )
                 ],
               ),
-              child: Center(
-                child: Text(
-                  widget.price,
-                  style: TextStyle(
-                    color: widget.isActive ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: widget.isActive ? 14 : 13,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    widget.price,
+                    style: TextStyle(
+                      color: widget.isActive ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: widget.isActive ? 14 : 13,
+                    ),
                   ),
-                ),
+                  if (widget.isFavorite) ...[
+                    const SizedBox(width: 4),
+                    Icon(Icons.favorite, color: Colors.red.shade400, size: 14),
+                  ]
+                ],
               ),
             ),
           ],

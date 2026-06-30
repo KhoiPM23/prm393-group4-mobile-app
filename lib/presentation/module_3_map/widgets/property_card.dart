@@ -9,11 +9,15 @@ class PropertyPreviewCard extends StatefulWidget {
   final String distance;
   final Widget actionButton;
   final Widget? secondaryActionButton;
+  final bool isFavorite;
+  final VoidCallback onFavoriteToggle;
 
   const PropertyPreviewCard({super.key, 
       required this.property,
       required this.distance,
       required this.actionButton,
+      required this.isFavorite,
+      required this.onFavoriteToggle,
       this.secondaryActionButton});
 
   @override
@@ -109,7 +113,10 @@ class PropertyPreviewCardState extends State<PropertyPreviewCard> {
                 Positioned(
                   top: 12,
                   right: 12,
-                  child: _FavoriteButton(propertyId: widget.property.id),
+                  child: _FavoriteButton(
+                    isFavorite: widget.isFavorite,
+                    onToggle: widget.onFavoriteToggle,
+                  ),
                 ),
               ],
             ),
@@ -191,8 +198,9 @@ class PropertyPreviewCardState extends State<PropertyPreviewCard> {
 }
 
 class _FavoriteButton extends StatefulWidget {
-  final String propertyId;
-  const _FavoriteButton({required this.propertyId});
+  final bool isFavorite;
+  final VoidCallback onToggle;
+  const _FavoriteButton({required this.isFavorite, required this.onToggle});
 
   @override
   State<_FavoriteButton> createState() => _FavoriteButtonState();
@@ -200,7 +208,6 @@ class _FavoriteButton extends StatefulWidget {
 
 class _FavoriteButtonState extends State<_FavoriteButton>
     with SingleTickerProviderStateMixin {
-  bool _isFavorite = false;
   late final AnimationController _bounceCtrl;
   late final Animation<double> _scaleAnim;
 
@@ -230,7 +237,7 @@ class _FavoriteButtonState extends State<_FavoriteButton>
     return GestureDetector(
       onTap: () {
         HapticFeedback.heavyImpact(); // Thêm rung phản hồi
-        setState(() => _isFavorite = !_isFavorite);
+        widget.onToggle();
         _bounceCtrl.forward(from: 0); // Trigger mỗi lần tap
       },
       child: Stack(
@@ -245,7 +252,7 @@ class _FavoriteButtonState extends State<_FavoriteButton>
                 final progress = _bounceCtrl.value;
                 final distance = progress * 24.0;
                 final opacity = 1.0 - progress;
-                if (!_isFavorite || progress == 0.0 || progress == 1.0) {
+                if (!widget.isFavorite || progress == 0.0 || progress == 1.0) {
                   return const SizedBox.shrink();
                 }
                 return Transform.translate(
@@ -287,10 +294,10 @@ class _FavoriteButtonState extends State<_FavoriteButton>
                 transitionBuilder: (child, anim) =>
                     ScaleTransition(scale: anim, child: child),
                 child: Icon(
-                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                  widget.isFavorite ? Icons.favorite : Icons.favorite_border,
                   key: ValueKey(
-                      _isFavorite), // Quan trọng: key khác nhau mới trigger switcher
-                  color: _isFavorite ? Colors.red.shade400 : Colors.black54,
+                      widget.isFavorite), // Quan trọng: key khác nhau mới trigger switcher
+                  color: widget.isFavorite ? Colors.red.shade400 : Colors.black54,
                   size: 18,
                 ),
               ), // AnimatedSwitcher

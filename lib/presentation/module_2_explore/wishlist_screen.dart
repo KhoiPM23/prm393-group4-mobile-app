@@ -32,9 +32,12 @@ class _WishlistScreenState extends State<WishlistScreen> {
       case 1:
         break; // Already here
       case 2:
-        Navigator.of(context).pushNamed('/profile');
+        Navigator.of(context).pushNamed('/explore-intro');
         break;
       case 3:
+        Navigator.of(context).pushNamed('/chat');
+        break;
+      case 4:
         Navigator.of(context).pushNamed('/profile');
         break;
     }

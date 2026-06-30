@@ -51,10 +51,10 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.of(context).pushNamed('/wishlist');
         break;
       case 2:
-        Navigator.of(context).pushNamed('/profile'); // Trips placeholder
+        Navigator.of(context).pushNamed('/explore-intro');
         break;
       case 3:
-        Navigator.of(context).pushNamed('/inbox');
+        Navigator.of(context).pushNamed('/chat');
         break;
       case 4:
         Navigator.of(context).pushNamed('/profile');
@@ -93,9 +93,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
                   child: _SearchBar(
                     controller: _searchController,
-                    onTap: () => Navigator.of(context).pushNamed('/explore'),
-                    onSubmitted: (_) => Navigator.of(context).pushNamed('/explore'),
-                    onFilterTap: () => Navigator.of(context).pushNamed('/explore'),
+                    onTap: () => Navigator.of(context).pushNamed('/explore-intro'),
+                    onSubmitted: (_) => Navigator.of(context).pushNamed('/explore-intro'),
+                    onFilterTap: () => Navigator.of(context).pushNamed('/explore-intro'),
                   ),
                 ),
               ),

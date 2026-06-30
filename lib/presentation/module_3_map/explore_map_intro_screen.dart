@@ -371,10 +371,10 @@ class _ExploreMapIntroScreenState extends State<ExploreMapIntroScreen> {
   Widget _buildSearchBarUI() {
     return Padding(
       padding: EdgeInsets.only(
-          top: _isSearchingActive ? 16 : 8,
+          top: 8,
           left: 24,
           right: 24,
-          bottom: 16),
+          bottom: _isSearchingActive ? 8 : 16),
       child: Container(
         padding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

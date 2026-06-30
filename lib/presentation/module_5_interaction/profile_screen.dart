@@ -25,7 +25,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  int _currentNavIndex = 3;
+  int _currentNavIndex = 4;
 
   final List<_TripCard> _trips = const [
     _TripCard(
@@ -143,10 +143,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: VibeBottomNavBar(
               currentIndex: _currentNavIndex,
               onTap: (i) {
+                if (i == _currentNavIndex) return;
                 setState(() => _currentNavIndex = i);
                 if (i == 0) {
-                  Navigator.of(context)
-                      .pushReplacementNamed('/home');
+                  Navigator.of(context).pushReplacementNamed('/home');
+                } else if (i == 1) {
+                  Navigator.of(context).pushReplacementNamed('/wishlist');
+                } else if (i == 2) {
+                  Navigator.of(context).pushReplacementNamed('/explore-intro');
+                } else if (i == 3) {
+                  Navigator.of(context).pushReplacementNamed('/chat');
                 }
               },
             ),
