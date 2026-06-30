@@ -26,7 +26,7 @@ class _PriceMarkerState extends State<PriceMarker>
         vsync: this, duration: const Duration(milliseconds: 1500));
     if (widget.isActive) _rippleCtrl.repeat();
 
-    // Tạo độ trễ ngẫu nhiên nhẹ dựa vào hashCode của giá để các marker không hiện ra cùng lúc (Staggered Load)
+    // Tạo độ trễ ngẫu nhiên nhẹ để các marker không hiện ra cùng lúc (Staggered Load)
     Future.delayed(Duration(milliseconds: widget.price.hashCode % 400), () {
       if (mounted) _spawnCtrl.forward();
     });
@@ -52,90 +52,105 @@ class _PriceMarkerState extends State<PriceMarker>
 
   @override
   Widget build(BuildContext context) {
-    return SlideTransition(
-      position: Tween<Offset>(
-        begin: const Offset(0, -0.5),
-        end: Offset.zero,
-      ).animate(CurvedAnimation(parent: _spawnCtrl, curve: Curves.bounceOut)),
-      child: FadeTransition(
-        opacity: _spawnAnim,
-        child: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 1.0, end: widget.isActive ? 1.15 : 1.0),
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutBack,
-          builder: (_, scale, child) =>
-              Transform.scale(scale: scale, child: child),
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              // Radar Ripple Effect when Active
-              if (widget.isActive)
-                AnimatedBuilder(
-                  animation: _rippleCtrl,
-                  builder: (context, _) {
-                    final val1 = _rippleCtrl.value;
-                    final val2 = (val1 + 0.5) % 1.0;
-                    return Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Container(
-                          width: 50 + (val1 * 50),
-                          height: 30 + (val1 * 50),
-                          decoration: BoxDecoration(
-                            color: Colors.black
-                                .withValues(alpha: (1 - val1) * 0.4),
-                            borderRadius: BorderRadius.circular(40),
-                          ),
-                        ),
-                        Container(
-                          width: 50 + (val2 * 50),
-                          height: 30 + (val2 * 50),
-                          decoration: BoxDecoration(
-                            color: Colors.black
-                                .withValues(alpha: (1 - val2) * 0.4),
-                            borderRadius: BorderRadius.circular(40),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: widget.isActive ? Colors.black : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: widget.isActive
-                      ? Border.all(color: Colors.transparent, width: 1)
-                      : Border.all(color: Colors.grey.shade300, width: 1),
-                  boxShadow: [
-                    BoxShadow(
-                      color: widget.isActive
-                          ? Colors.black.withValues(alpha: 0.35)
-                          : Colors.black.withValues(alpha: 0.12),
-                      blurRadius: widget.isActive ? 16 : 6,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    widget.price,
-                    style: TextStyle(
-                      color: widget.isActive ? Colors.white : Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: widget.isActive ? 14 : 13,
-                    ),
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _spawnAnim,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _spawnAnim.value * (widget.isActive ? 1.15 : 1.0),
+            child: child,
+          );
+        },
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            // Radar Ripple Effect when Active
+            if (widget.isActive)
+              CustomPaint(
+                size: const Size(100, 100),
+                painter: _RipplePainter(animation: _rippleCtrl),
+              ),
+            Container(
+              width: 70,
+              height: 32,
+              decoration: BoxDecoration(
+                color: widget.isActive ? Colors.black : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: widget.isActive
+                    ? null
+                    : Border.all(color: Colors.grey.shade300, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.isActive
+                        ? Colors.black.withValues(alpha: 0.35)
+                        : Colors.black.withValues(alpha: 0.12),
+                    blurRadius: widget.isActive ? 16 : 6,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  widget.price,
+                  style: TextStyle(
+                    color: widget.isActive ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: widget.isActive ? 14 : 13,
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+class _RipplePainter extends CustomPainter {
+  final Animation<double> animation;
+
+  _RipplePainter({required this.animation}) : super(repaint: animation);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final val1 = animation.value;
+    final val2 = (val1 + 0.5) % 1.0;
+
+    final paint1 = Paint()
+      ..color = Colors.black.withValues(alpha: (1 - val1) * 0.4)
+      ..style = PaintingStyle.fill;
+      
+    final paint2 = Paint()
+      ..color = Colors.black.withValues(alpha: (1 - val2) * 0.4)
+      ..style = PaintingStyle.fill;
+
+    final baseWidth = 50.0;
+    final baseHeight = 30.0;
+
+    final rRect1 = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(size.width / 2, size.height / 2),
+        width: baseWidth * (1.0 + val1),
+        height: baseHeight * (1.0 + val1),
+      ),
+      const Radius.circular(40),
+    );
+
+    final rRect2 = RRect.fromRectAndRadius(
+      Rect.fromCenter(
+        center: Offset(size.width / 2, size.height / 2),
+        width: baseWidth * (1.0 + val2),
+        height: baseHeight * (1.0 + val2),
+      ),
+      const Radius.circular(40),
+    );
+
+    canvas.drawRRect(rRect1, paint1);
+    canvas.drawRRect(rRect2, paint2);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RipplePainter oldDelegate) => true;
 }

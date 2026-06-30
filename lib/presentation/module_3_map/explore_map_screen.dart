@@ -17,14 +17,22 @@ import '../widgets/vibe_bottom_nav_bar.dart';
 import 'bloc/map_bloc.dart';
 import 'bloc/map_event.dart';
 import 'bloc/map_state.dart';
-import 'widgets/price_marker.dart';
-import 'widgets/map_scale_bar.dart';
-import 'widgets/property_card.dart';
 import 'widgets/floating_search_bar.dart';
+import 'widgets/map_filter_bottom_sheet.dart';
+import 'widgets/map_scale_bar.dart';
+import 'widgets/price_filter_modal.dart';
+import 'widgets/price_marker.dart';
+import 'widgets/property_card.dart';
 import 'widgets/user_location_beacon.dart';
 
 class ExploreMapScreen extends StatefulWidget {
-  const ExploreMapScreen({super.key});
+  final String? city;
+  final DateTimeRange? dates;
+  final double? lat;
+  final double? lon;
+
+  const ExploreMapScreen(
+      {super.key, this.city, this.dates, this.lat, this.lon});
 
   @override
   State<ExploreMapScreen> createState() => _ExploreMapScreenState();
@@ -32,6 +40,7 @@ class ExploreMapScreen extends StatefulWidget {
 
 class _ExploreMapScreenState extends State<ExploreMapScreen>
     with TickerProviderStateMixin {
+  bool _showSearchBox = false;
   int _currentNavIndex = 1;
   final MapController _mapController = MapController();
   final DraggableScrollableController _sheetController =
@@ -46,7 +55,15 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
   @override
   void initState() {
     super.initState();
-    context.read<MapBloc>().add(MapInitialized());
+    final bloc = context.read<MapBloc>();
+    bloc.add(MapInitialized());
+    if (widget.city != null && widget.city!.isNotEmpty) {
+      bloc.add(MapLocationChanged(city: widget.city!, district: 'Tất cả'));
+    }
+    if (widget.dates != null) {
+      bloc.add(MapDateRangeSelected(
+          checkIn: widget.dates!.start, checkOut: widget.dates!.end));
+    }
     _requestAndGetUserLocation();
   }
 
@@ -111,7 +128,7 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
         if (_cameraAnimController == animationController) {
           _cameraAnimController = null;
         }
-        _updateViewportBounds();
+        _updateViewportBounds(false);
       }
     });
     animationController.forward();
@@ -144,17 +161,15 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
     }
   }
 
-  void _updateViewportBounds() {
-    _boundsDebounceTimer?.cancel();
-    _boundsDebounceTimer = Timer(const Duration(milliseconds: 200), () {
-      if (!mounted) return;
-      final bounds = _mapController.camera.visibleBounds;
-      context.read<MapBloc>().add(MapViewportChanged(
+  void _updateViewportBounds(bool isGesture) {
+    final bounds = _mapController.camera.visibleBounds;
+    context.read<MapBloc>().add(MapViewportChanged(
           minLat: bounds.southWest.latitude,
           maxLat: bounds.northEast.latitude,
           minLng: bounds.southWest.longitude,
-          maxLng: bounds.northEast.longitude));
-    });
+          maxLng: bounds.northEast.longitude,
+          isGesture: isGesture,
+        ));
   }
 
   Widget _buildQuickFilterChip({
@@ -245,7 +260,7 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
     final mq = MediaQuery.of(context);
     // Tính toán chiều cao tối đa của tấm trượt để vừa khít dưới thanh tìm kiếm (khoảng 145px + safeArea)
     final double maxListSize =
-        (1.0 - ((mq.padding.top + 130) / mq.size.height)).clamp(0.5, 0.95);
+        (1.0 - ((mq.padding.top + 122) / mq.size.height)).clamp(0.5, 0.95);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -303,13 +318,16 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
               child: FlutterMap(
                 mapController: _mapController,
                 options: MapOptions(
-                  initialCenter: const LatLng(16.055, 108.235),
-                  initialZoom: 13.5,
+                  initialCenter: widget.lat != null && widget.lon != null
+                      ? LatLng(widget.lat!, widget.lon!)
+                      : const LatLng(16.055, 108.235),
+                  initialZoom:
+                      widget.lat != null && widget.lon != null ? 13.0 : 13.5,
                   minZoom: 9.0, // Cho phép zoom xa hơn để thấy tới Hội An
                   maxZoom: 18.0,
-                  onMapReady: _updateViewportBounds,
+                  onMapReady: () => _updateViewportBounds(false),
                   onPositionChanged: (position, hasGesture) {
-                    if (hasGesture) _updateViewportBounds();
+                    if (hasGesture) _updateViewportBounds(true);
                   },
                   onTap: (_, __) {
                     _searchFocusNode.unfocus();
@@ -386,7 +404,8 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
               child: BlocBuilder<MapBloc, MapState>(
                 builder: (context, state) {
                   final isSelected = state.selectedProperty != null;
-                  final isSearchActive = state.searchQuery.isNotEmpty;
+                  final isSearchActive = state.searchQuery.isNotEmpty &&
+                      state.searchQuery != 'Khu vực bản đồ';
                   final displayList = isSearchActive
                       ? state.allProperties
                       : state.visibleProperties;
@@ -441,13 +460,17 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      FloatingSearchBar(
-                                        focusNode: _searchFocusNode,
-                                        onBackTap: () {
-                                          _searchFocusNode.unfocus();
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
+                                      if (_showSearchBox)
+                                        FloatingSearchBar(
+                                          focusNode: _searchFocusNode,
+                                          onBackTap: () {
+                                            _searchFocusNode.unfocus();
+                                            setState(
+                                                () => _showSearchBox = false);
+                                          },
+                                        )
+                                      else
+                                        _buildSearchPill(context),
                                       const SizedBox(height: 8),
                                       SingleChildScrollView(
                                         scrollDirection: Axis.horizontal,
@@ -455,172 +478,164 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                         child: Row(
                                           children: [
                                             GestureDetector(
-                                              onTap: _pickDateRange,
-                                              child: AnimatedContainer(
-                                                duration: const Duration(
-                                                    milliseconds: 250),
+                                              onTap: () {
+                                                final mapBloc =
+                                                    context.read<MapBloc>();
+                                                showModalBottomSheet(
+                                                  context: context,
+                                                  isScrollControlled: true,
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                  builder: (_) =>
+                                                      BlocProvider.value(
+                                                    value: mapBloc,
+                                                    child:
+                                                        const PriceFilterModal(),
+                                                  ),
+                                                );
+                                              },
+                                              child: Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                         horizontal: 16,
                                                         vertical: 8),
                                                 decoration: BoxDecoration(
-                                                  color:
-                                                      _selectedDateRange != null
-                                                          ? null
-                                                          : Colors.white,
-                                                  gradient: _selectedDateRange !=
-                                                          null
-                                                      ? const LinearGradient(
-                                                          colors: [
-                                                            AppColors
-                                                                .secondaryContainer,
-                                                            AppColors
-                                                                .secondaryFixed,
-                                                          ],
-                                                          begin:
-                                                              Alignment.topLeft,
-                                                          end: Alignment
-                                                              .bottomRight,
-                                                        )
-                                                      : null,
+                                                  color: Colors.white,
                                                   borderRadius:
                                                       BorderRadius.circular(20),
                                                   border: Border.all(
-                                                    color: _selectedDateRange !=
-                                                            null
-                                                        ? AppColors.secondary
-                                                            .withValues(
-                                                                alpha: 0.6)
-                                                        : Colors.transparent,
-                                                    width: 1,
-                                                  ),
+                                                      color:
+                                                          Colors.grey.shade300,
+                                                      width: 1),
                                                   boxShadow: [
                                                     BoxShadow(
-                                                      color:
-                                                          _selectedDateRange !=
-                                                                  null
-                                                              ? AppColors
-                                                                  .secondary
-                                                                  .withValues(
-                                                                      alpha:
-                                                                          0.20)
-                                                              : Colors.black
-                                                                  .withValues(
-                                                                      alpha:
-                                                                          0.08),
-                                                      blurRadius:
-                                                          _selectedDateRange !=
-                                                                  null
-                                                              ? 12
-                                                              : 8,
+                                                      color: Colors.black
+                                                          .withOpacity(0.05),
+                                                      blurRadius: 4,
                                                       offset:
                                                           const Offset(0, 2),
                                                     ),
                                                   ],
                                                 ),
-                                                child: Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    AnimatedSwitcher(
-                                                      duration: const Duration(
-                                                          milliseconds: 200),
-                                                      child: Icon(
-                                                        _selectedDateRange != null
-                                                            ? Icons
-                                                                .calendar_today
-                                                            : Icons
-                                                                .calendar_month,
-                                                        key: ValueKey(
-                                                            _selectedDateRange !=
-                                                                null),
-                                                        size: 16,
-                                                        color: _selectedDateRange !=
-                                                                null
-                                                            ? AppColors
-                                                                .onSecondaryContainer
-                                                            : Colors
-                                                                .grey.shade700,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Text(
-                                                      _selectedDateRange == null
-                                                          ? 'Chọn ngày dự kiến'
-                                                          : '${_selectedDateRange!.start.day}/${_selectedDateRange!.start.month} - ${_selectedDateRange!.end.day}/${_selectedDateRange!.end.month}',
-                                                      style: TextStyle(
-                                                        fontSize: 13,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        color: _selectedDateRange !=
-                                                                null
-                                                            ? AppColors
-                                                                .onSecondaryContainer
-                                                            : AppColors
-                                                                .onSurface,
-                                                      ),
-                                                    ),
-                                                    if (_selectedDateRange !=
-                                                        null) ...[
-                                                      const SizedBox(width: 6),
-                                                      GestureDetector(
-                                                        onTap: () => setState(() =>
-                                                            _selectedDateRange =
-                                                                null),
-                                                        child: Icon(
-                                                            Icons.close_rounded,
-                                                            size: 14,
-                                                            color: AppColors
-                                                                .onSecondaryContainer
-                                                                .withValues(
-                                                                    alpha:
-                                                                        0.7)),
-                                                      ),
+                                                child:
+                                                    Builder(builder: (context) {
+                                                  final state = context
+                                                      .watch<MapBloc>()
+                                                      .state;
+                                                  String priceText = 'Giá';
+                                                  if (state.minPrice != null ||
+                                                      state.maxPrice != null) {
+                                                    final min =
+                                                        ((state.minPrice ?? 0) /
+                                                                1000000)
+                                                            .toStringAsFixed(1)
+                                                            .replaceAll(
+                                                                '.0', '');
+                                                    final max = ((state
+                                                                    .maxPrice ??
+                                                                10000000) /
+                                                            1000000)
+                                                        .toStringAsFixed(1)
+                                                        .replaceAll('.0', '');
+                                                    priceText =
+                                                        '${min}M - ${max}M';
+                                                  }
+                                                  return Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Text(priceText,
+                                                          style: const TextStyle(
+                                                              fontSize: 13,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: Colors
+                                                                  .black87)),
+                                                      const SizedBox(width: 4),
+                                                      const Icon(
+                                                          Icons
+                                                              .keyboard_arrow_down,
+                                                          size: 18,
+                                                          color:
+                                                              Colors.black87),
                                                     ],
-                                                  ],
-                                                ),
+                                                  );
+                                                }),
                                               ),
                                             ),
-                                            const SizedBox(width: 8),
-                                            _buildQuickFilterChip(
-                                              icon: Icons.my_location,
-                                              label: 'Gần tôi',
-                                              isActive: state.userLocation != null,
-                                              onTap: () async {
-                                                await _requestAndGetUserLocation();
-                                                if (state.userLocation != null) {
-                                                  _animatedMapMove(state.userLocation!, 15.5);
-                                                }
-                                              },
-                                            ),
                                             ...[
-                                              {'icon': Icons.pool, 'label': 'Hồ bơi', 'name': 'Hồ bơi'},
-                                              {'icon': Icons.wifi, 'label': 'Wifi', 'name': 'Wifi'},
-                                              {'icon': Icons.kitchen, 'label': 'Bếp', 'name': 'Bếp'},
-                                              {'icon': Icons.pets, 'label': 'Thú cưng', 'name': 'Cho phép thú cưng'},
-                                              {'icon': Icons.ac_unit, 'label': 'Máy lạnh', 'name': 'Máy lạnh'},
-                                              {'icon': Icons.local_parking, 'label': 'Đậu xe', 'name': 'Chỗ đậu xe'},
-                                              {'icon': Icons.local_laundry_service, 'label': 'Máy giặt', 'name': 'Máy giặt'},
-                                            ].map((amenity) {
-                                              final name = amenity['name'] as String;
-                                              return Padding(
-                                                padding: const EdgeInsets.only(left: 8),
-                                                child: _buildQuickFilterChip(
-                                                  icon: amenity['icon'] as IconData,
-                                                  label: amenity['label'] as String,
-                                                  isActive: state.selectedAmenities.contains(name),
-                                                  onTap: () {
-                                                    HapticFeedback.selectionClick();
-                                                    final current = context.read<MapBloc>().state;
-                                                    final amens = List<String>.from(current.selectedAmenities);
-                                                    amens.contains(name) ? amens.remove(name) : amens.add(name);
-                                                    context.read<MapBloc>().add(MapFilterApplied(
-                                                      minPrice: current.minPrice,
-                                                      maxPrice: current.maxPrice,
-                                                      minRating: current.minRating,
-                                                      selectedAmenities: amens,
-                                                    ));
+                                              {
+                                                'icon': Icons.pool,
+                                                'label': 'Hồ bơi',
+                                                'name': 'Hồ bơi'
                                               },
+                                              {
+                                                'icon': Icons.wifi,
+                                                'label': 'Wifi',
+                                                'name': 'Wifi'
+                                              },
+                                              {
+                                                'icon': Icons.kitchen,
+                                                'label': 'Bếp',
+                                                'name': 'Bếp'
+                                              },
+                                              {
+                                                'icon': Icons.ac_unit,
+                                                'label': 'Máy lạnh',
+                                                'name': 'Máy lạnh'
+                                              },
+                                              {
+                                                'icon': Icons.local_parking,
+                                                'label': 'Đậu xe',
+                                                'name': 'Chỗ đậu xe'
+                                              },
+                                              {
+                                                'icon':
+                                                    Icons.local_laundry_service,
+                                                'label': 'Máy giặt',
+                                                'name': 'Máy giặt'
+                                              },
+                                            ].map((amenity) {
+                                              final name =
+                                                  amenity['name'] as String;
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left: 8),
+                                                child: _buildQuickFilterChip(
+                                                  icon: amenity['icon']
+                                                      as IconData,
+                                                  label: amenity['label']
+                                                      as String,
+                                                  isActive: state
+                                                      .selectedAmenities
+                                                      .contains(name),
+                                                  onTap: () {
+                                                    HapticFeedback
+                                                        .selectionClick();
+                                                    final current = context
+                                                        .read<MapBloc>()
+                                                        .state;
+                                                    final amens = List<
+                                                            String>.from(
+                                                        current
+                                                            .selectedAmenities);
+                                                    amens.contains(name)
+                                                        ? amens.remove(name)
+                                                        : amens.add(name);
+                                                    context
+                                                        .read<MapBloc>()
+                                                        .add(MapFilterApplied(
+                                                          minPrice:
+                                                              current.minPrice,
+                                                          maxPrice:
+                                                              current.maxPrice,
+                                                          minRating:
+                                                              current.minRating,
+                                                          selectedAmenities:
+                                                              amens,
+                                                        ));
+                                                  },
                                                 ),
                                               );
                                             }),
@@ -629,7 +644,8 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                               icon: Icons.pets,
                                               label: 'Thú cưng',
                                               isActive: state.selectedAmenities
-                                                  .contains('Thú cưng'),
+                                                  .contains(
+                                                      'Cho phép thú cưng'),
                                               onTap: () {
                                                 HapticFeedback.selectionClick();
                                                 final current = context
@@ -637,9 +653,12 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                                     .state;
                                                 final amens = List<String>.from(
                                                     current.selectedAmenities);
-                                                amens.contains('Thú cưng')
-                                                    ? amens.remove('Thú cưng')
-                                                    : amens.add('Thú cưng');
+                                                amens.contains(
+                                                        'Cho phép thú cưng')
+                                                    ? amens.remove(
+                                                        'Cho phép thú cưng')
+                                                    : amens.add(
+                                                        'Cho phép thú cưng');
                                                 context.read<MapBloc>().add(
                                                     MapFilterApplied(
                                                         minPrice:
@@ -1108,5 +1127,138 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
       ),
     );
   }
-}
 
+  void _showFilterOptions(BuildContext context) {
+    final mapBloc = context.read<MapBloc>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => BlocProvider.value(
+        value: mapBloc,
+        child: const MapFilterModal(),
+      ),
+    );
+  }
+
+  Widget _buildSearchPill(BuildContext context) {
+    final state = context.read<MapBloc>().state;
+    String locationText = state.searchQuery.isNotEmpty
+        ? state.searchQuery
+        : (widget.city ?? 'Mọi nơi');
+    String dateText = widget.dates != null
+        ? '${widget.dates!.start.day}-${widget.dates!.end.day} Thg ${widget.dates!.start.month}'
+        : 'Bất kỳ tuần nào';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        children: [
+          // Search Button (Real-time Map Search)
+          GestureDetector(
+            onTap: () => setState(() => _showSearchBox = true),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2))
+                ],
+              ),
+              child: const Icon(Icons.search, size: 20, color: Colors.black87),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Search Pill
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushReplacementNamed('/explore-intro');
+              },
+              child: Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2))
+                  ],
+                ),
+                child: locationText.length > 15
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            locationText,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: Colors.black87),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                          Text(
+                            dateText,
+                            style: TextStyle(
+                                color: Colors.grey.shade600, fontSize: 12),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            locationText,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: Colors.black87),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text('•',
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 13)),
+                          const SizedBox(width: 4),
+                          Text(
+                            dateText,
+                            style: TextStyle(
+                                color: Colors.grey.shade600, fontSize: 13),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Filter Button
+          GestureDetector(
+            onTap: () => _showFilterOptions(context),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2))
+                ],
+              ),
+              child: const Icon(Icons.tune, size: 18, color: Colors.black87),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

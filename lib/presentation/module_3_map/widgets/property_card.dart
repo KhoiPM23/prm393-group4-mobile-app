@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../domain/entities/property_entity.dart';
 
 class PropertyPreviewCard extends StatefulWidget {
@@ -56,10 +57,13 @@ class PropertyPreviewCardState extends State<PropertyPreviewCard> {
                                 setState(() => _currentPage = idx),
                             itemCount: widget.property.imageUrls.length,
                             itemBuilder: (context, index) {
-                              return Image.network(
-                                widget.property.imageUrls[index],
+                              return CachedNetworkImage(
+                                imageUrl: widget.property.imageUrls[index],
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
+                                placeholder: (context, url) => Container(
+                                    color: Colors.grey.shade200,
+                                ),
+                                errorWidget: (context, url, error) => Container(
                                     color: Colors.grey.shade100,
                                     child: const Icon(Icons.villa,
                                         color: Colors.grey)),

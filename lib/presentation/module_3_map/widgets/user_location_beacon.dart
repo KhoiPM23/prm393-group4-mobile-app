@@ -9,8 +9,7 @@ class UserLocationBeacon extends StatefulWidget {
 class UserLocationBeaconState extends State<UserLocationBeacon>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-  late final Animation<double> _ringScale;
-  late final Animation<double> _ringOpacity;
+  
   @override
   void initState() {
     super.initState();
@@ -18,12 +17,6 @@ class UserLocationBeaconState extends State<UserLocationBeacon>
       vsync: this,
       duration: const Duration(milliseconds: 1800),
     )..repeat();
-    _ringScale = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-    );
-    _ringOpacity = Tween<double>(begin: 0.6, end: 0.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-    );
   }
 
   @override
@@ -34,62 +27,78 @@ class UserLocationBeaconState extends State<UserLocationBeacon>
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 36,
-      height: 36,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Vòng sóng lan tỏa
-          AnimatedBuilder(
-            animation: _ctrl,
-            builder: (_, __) => Opacity(
-              opacity: _ringOpacity.value,
-              child: Transform.scale(
-                scale: _ringScale.value,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.blue.shade400,
-                      width: 2.5,
-                    ),
-                  ),
-                ),
+    return RepaintBoundary(
+      child: SizedBox(
+        width: 36,
+        height: 36,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Vòng sóng lan tỏa (Dùng CustomPainter để tránh build lại Widget)
+            CustomPaint(
+              size: const Size(36, 36),
+              painter: _BeaconPainter(animation: _ctrl),
+            ),
+            // Vòng nền mờ tĩnh
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.blue.withValues(alpha: 0.20),
               ),
             ),
-          ),
-          // Vòng nền mờ
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.blue.withValues(alpha: 0.20),
+            // Chấm xanh trung tâm — viền trắng rõ nét tĩnh
+            Container(
+              width: 13,
+              height: 13,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.blue.shade600,
+                border: Border.all(color: Colors.white, width: 2.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withValues(alpha: 0.4),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
             ),
-          ),
-          // Chấm xanh trung tâm — viền trắng rõ nét
-          Container(
-            width: 13,
-            height: 13,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.blue.shade600,
-              border: Border.all(color: Colors.white, width: 2.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withValues(alpha: 0.4),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
+class _BeaconPainter extends CustomPainter {
+  final Animation<double> animation;
+
+  _BeaconPainter({required this.animation}) : super(repaint: animation);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = Curves.easeOut.transform(animation.value);
+    
+    // Scale goes from 0.5 to 1.0
+    final scale = 0.5 + (0.5 * t);
+    
+    // Opacity goes from 0.6 to 0.0
+    final opacity = 0.6 * (1.0 - t);
+    
+    final paint = Paint()
+      ..color = Colors.blue.shade400.withValues(alpha: opacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5 / scale; // Đảm bảo độ dày viền không đổi khi scale
+
+    canvas.save();
+    canvas.translate(size.width / 2, size.height / 2);
+    canvas.scale(scale);
+    canvas.drawCircle(Offset.zero, 18, paint); // 18 is half of 36 width
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _BeaconPainter oldDelegate) => true;
+}

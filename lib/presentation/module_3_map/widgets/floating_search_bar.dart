@@ -32,8 +32,11 @@ class FloatingSearchBarState extends State<FloatingSearchBar> {
   @override
   void initState() {
     super.initState();
-    _searchController =
-        TextEditingController(text: context.read<MapBloc>().state.searchQuery);
+    final initialQuery = context.read<MapBloc>().state.searchQuery;
+    _searchController = TextEditingController(
+        text: (initialQuery == 'Khu vực bản đồ' || initialQuery == 'Mọi nơi') 
+            ? '' 
+            : initialQuery);
     // Lưu reference để dispose đúng cách
     _focusListener = () {
       if (widget.focusNode.hasFocus) {

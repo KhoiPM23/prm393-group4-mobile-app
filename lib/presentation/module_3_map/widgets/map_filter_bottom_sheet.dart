@@ -179,7 +179,7 @@ class MapFilterModalState extends State<MapFilterModal> {
                 const SizedBox(height: 24),
                 // HISTOGRAM + SLIDER STACK UI (Airbnb Style)
                 SizedBox(
-                  height: 60,
+                  height: 80,
                   child: Stack(
                     alignment: Alignment.bottomCenter,
                     children: [
