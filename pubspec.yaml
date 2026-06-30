@@ -52,6 +52,8 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.20
   path_provider: ^2.1.2
   path: ^1.9.0
+  intl: ^0.20.3
+  syncfusion_flutter_datepicker: ^33.2.15
 
 dev_dependencies:
   flutter_test:

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/theme/app_theme.dart';
+import 'data/repositories/mock_booking_repository.dart';
 import 'data/repositories/mock_property_repository.dart';
 import 'presentation/module_1_auth/forgot_password_screen.dart';
 // Auth screens
@@ -14,6 +15,7 @@ import 'presentation/module_1_auth/reset_password_screen.dart';
 import 'presentation/module_2_explore/home_screen.dart';
 import 'presentation/module_3_map/bloc/map_bloc.dart';
 // Map screens
+import 'presentation/module_3_map/explore_map_intro_screen.dart';
 import 'presentation/module_3_map/explore_map_screen.dart';
 import 'presentation/module_4_booking/booking_confirm_screen.dart';
 // Booking screens
@@ -23,8 +25,11 @@ import 'presentation/module_5_interaction/chat_screen.dart';
 import 'presentation/module_5_interaction/notification_center_screen.dart';
 import 'presentation/module_5_interaction/profile_screen.dart';
 
+import 'error_dumper.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  setupErrorCatcher();
   await Firebase.initializeApp();
   // Enforce portrait orientation for mobile-first design
   SystemChrome.setPreferredOrientations([
@@ -65,12 +70,22 @@ class VibeLocalsApp extends StatelessWidget {
 
         // ===== MAIN APP FLOW =====
         '/home': (context) => const HomeScreen(),
-        '/explore': (context) => BlocProvider(
-              create: (context) => MapBloc(
-                propertyRepository: MockPropertyRepository(),
-              ),
-              child: const ExploreMapScreen(),
+        '/explore-intro': (context) => const ExploreMapIntroScreen(),
+        '/explore': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+          return BlocProvider(
+            create: (context) => MapBloc(
+              propertyRepository: MockPropertyRepository(),
+              bookingRepository: MockBookingRepository(),
             ),
+            child: ExploreMapScreen(
+              city: (args != null && args['city'] != null) ? args['city'] as String : null,
+              dates: (args != null && args['dates'] != null) ? args['dates'] as DateTimeRange : null,
+              lat: (args != null && args['lat'] != null) ? args['lat'] as double : null,
+              lon: (args != null && args['lon'] != null) ? args['lon'] as double : null,
+            ),
+          );
+        },
 
         // ===== BOOKING FLOW =====
         '/property-detail': (context) => const PropertyDetailScreen(),
