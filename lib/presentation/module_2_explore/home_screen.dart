@@ -8,15 +8,16 @@ import '../widgets/vibe_bottom_nav_bar.dart';
 import '../blocs/home/home_bloc.dart';
 import '../blocs/home/home_event.dart';
 import '../blocs/home/home_state.dart';
+import '../blocs/auth/auth_bloc.dart';
+import '../blocs/auth/auth_state.dart';
 import '../../data/repositories/mock_property_repository.dart';
-import 'search_screen.dart';
+import 'cubit/wishlist_cubit.dart';
 
 /// Màn hình Trang chủ VibeLocals
 /// Route: /home
-/// Source: trang_ch_vibelocals/code.html
 /// Design:
 ///   - Fixed glassmorphic TopAppBar (logo + profile + notifications bell)
-///   - Pill search bar + filter button
+///   - Pill search bar → mở bản đồ (/explore)
 ///   - Horizontal category scroll (Xu hướng, Gần biển, Vùng núi, Độc đáo, Di sản)
 ///   - Vertical property list (PropertyCard)
 ///   - Glassmorphic BottomNavBar
@@ -40,20 +41,22 @@ class _HomeScreenState extends State<HomeScreen> {
     _Category(icon: Icons.castle_outlined, label: 'Di sản'),
   ];
 
-  // We will load properties via BLoC now, so we removed the hardcoded _properties list.
-
   void _onNavTap(int index) {
+    if (_currentNavIndex == index) return;
     setState(() => _currentNavIndex = index);
     switch (index) {
       case 0:
-        break; // Already home
+        break; // Home
       case 1:
-        Navigator.of(context).pushNamed('/explore-intro');
+        Navigator.of(context).pushNamed('/wishlist');
         break;
       case 2:
-        Navigator.of(context).pushNamed('/profile');
+        Navigator.of(context).pushNamed('/profile'); // Trips placeholder
         break;
       case 3:
+        Navigator.of(context).pushNamed('/inbox');
+        break;
+      case 4:
         Navigator.of(context).pushNamed('/profile');
         break;
     }
@@ -90,22 +93,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
                   child: _SearchBar(
                     controller: _searchController,
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => const SearchScreen(),
-                      ));
-                    },
-                    onSubmitted: (query) {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => SearchScreen(initialQuery: query),
-                      ));
-                    },
-                    onFilterTap: () {
-                      // Navigate to search screen then user can filter there
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (_) => const SearchScreen(),
-                      ));
-                    },
+                    onTap: () => Navigator.of(context).pushNamed('/explore'),
+                    onSubmitted: (_) => Navigator.of(context).pushNamed('/explore'),
+                    onFilterTap: () => Navigator.of(context).pushNamed('/explore'),
                   ),
                 ),
               ),
@@ -198,17 +188,21 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: AppSpacing.xxl),
                         itemBuilder: (context, i) {
                           final p = properties[i];
-                          // Format price to VND
                           final formattedPrice = '${p.pricePerNight.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ';
-                          
-                          return PropertyCard(
-                            title: p.title,
-                            location: p.location,
-                            priceText: formattedPrice,
-                            rating: p.rating,
-                            imageUrl: p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
-                            onTap: () =>
-                                Navigator.of(context).pushNamed('/property-detail', arguments: p),
+
+                          return BlocBuilder<WishlistCubit, Set<String>>(
+                            builder: (context, favoriteIds) => PropertyCard(
+                              title: p.title,
+                              location: p.location,
+                              priceText: formattedPrice,
+                              rating: p.rating,
+                              imageUrl: p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
+                              isFavorite: favoriteIds.contains(p.id),
+                              onFavoriteToggle: () =>
+                                  context.read<WishlistCubit>().toggleFavorite(p.id),
+                              onTap: () =>
+                                  Navigator.of(context).pushNamed('/property-detail', arguments: p),
+                            ),
                           );
                         },
                       ),
@@ -226,9 +220,21 @@ class _HomeScreenState extends State<HomeScreen> {
             top: 0,
             left: 0,
             right: 0,
-            child: _GlassTopBar(
-              onNotificationTap: () =>
-                  Navigator.of(context).pushNamed('/notifications'),
+            child: BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                String? avatarUrl;
+                String name = 'Khách';
+                if (state is Authenticated) {
+                  avatarUrl = state.user.avatarUrl;
+                  name = state.user.name;
+                }
+                return _GlassTopBar(
+                  avatarUrl: avatarUrl,
+                  userName: name,
+                  onNotificationTap: () =>
+                      Navigator.of(context).pushNamed('/notifications'),
+                );
+              },
             ),
           ),
           // Bottom Nav
@@ -252,8 +258,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _GlassTopBar extends StatelessWidget {
   final VoidCallback? onNotificationTap;
+  final String? avatarUrl;
+  final String userName;
 
-  const _GlassTopBar({this.onNotificationTap});
+  const _GlassTopBar({
+    this.onNotificationTap,
+    this.avatarUrl,
+    required this.userName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -285,12 +297,15 @@ class _GlassTopBar extends StatelessWidget {
                   color: AppColors.surfaceContainerHigh,
                 ),
                 child: ClipOval(
-                  child: Image.network(
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuAyXQVi4kCgu64-9fLx1TbULWLiGDvdv6KK0OLOyLqt4eEq1NyxryQnhF1D8PS4g6pYod5TOO-fj7ANWmmluIv4ADw7WVityaX1KuM289PANHYFFCz55mz9nSmHJtLqcNKCOcvUD-y0afjrJVHy-ev4qzBsKAf0THV1s7VPMkloTJGwiGN6TLcrummkQfOruTdP8lu7xtBPh57Bomhz2u-B3PYtbIDb3MyddDrDZXinW8XURCuHbPY0cvoqpcuIMWuKUuiBUusa2BI',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.person, color: AppColors.outline),
-                  ),
+                  child: avatarUrl != null && avatarUrl!.isNotEmpty
+                      ? Image.network(
+                          avatarUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(
+                              Icons.person,
+                              color: AppColors.outline),
+                        )
+                      : const Icon(Icons.person, color: AppColors.outline),
                 ),
               ),
               const SizedBox(width: 12),
@@ -307,7 +322,7 @@ class _GlassTopBar extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Chào buổi sáng!',
+                    'Chào $userName!',
                     style: AppTextStyles.labelMd.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),

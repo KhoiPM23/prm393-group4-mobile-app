@@ -110,4 +110,8 @@ class WishlistRepositoryImpl implements WishlistRepository {
   @override
   Stream<bool> watchIsPropertyInDefaultAlbum(String propertyId) =>
       _db.watchIsPropertyInDefaultAlbum(propertyId);
+
+  @override
+  Stream<Set<String>> watchDefaultAlbumPropertyIds() =>
+      _db.watchDefaultAlbumPropertyIds();
 }

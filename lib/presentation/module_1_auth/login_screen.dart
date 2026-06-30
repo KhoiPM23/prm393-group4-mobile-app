@@ -5,6 +5,10 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../data/repositories/firebase_user_repository.dart';
+// import '../../data/repositories/mock_user_repository.dart';
+import '../../domain/entities/user_entity.dart';
+import '../blocs/auth/auth_event.dart';
+import '../blocs/auth/auth_bloc.dart';
 import '../blocs/login/login_bloc.dart';
 import '../blocs/login/login_event.dart';
 import '../blocs/login/login_state.dart';
@@ -93,7 +97,15 @@ class _LoginScreenState extends State<LoginScreen>
       child: BlocConsumer<LoginBloc, LoginState>(
         listener: (context, state) {
           if (state is LoginSuccess) {
-            Navigator.of(context).pushReplacementNamed('/home');
+            // Save user to global AuthBloc
+            context.read<AuthBloc>().add(AuthUserChanged(state.user));
+
+            // Navigate based on role
+            if (state.user.role == UserRole.host) {
+              Navigator.of(context).pushReplacementNamed('/host-dashboard');
+            } else {
+              Navigator.of(context).pushReplacementNamed('/home');
+            }
           } else if (state is LoginFailure) {
             _showError(state.error);
           }

@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
+import '../../data/repositories/firebase_message_repository.dart';
+import '../../domain/entities/message_entity.dart';
+import '../../domain/entities/user_entity.dart';
+import '../blocs/auth/auth_bloc.dart';
+import '../blocs/auth/auth_state.dart';
 
 /// Màn hình Chat với Chủ nhà VibeLocals
 /// Route: /chat
-/// Source: tr_chuy_n_v_i_ch_nh_vibelocals/code.html
-/// Design:
-///   - Glassmorphic AppBar (back + avatar + online status + host name + more)
-///   - Scrollable chat area (incoming = left, outgoing = right)
-///   - Date divider "Hôm nay"
-///   - Read receipts (done_all icon)
-///   - Fixed bottom input bar (add + text field + emoji + send)
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
@@ -20,73 +19,50 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  final _messageRepository = FirebaseMessageRepository();
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
-  final List<_ChatMessage> _messages = [
-    _ChatMessage(
-      text:
-          'Chào bạn! Tôi là Minh Khôi. Cảm ơn bạn đã đặt phòng tại VibeLocals. Tôi có thể giúp gì cho bạn không?',
-      isOutgoing: false,
-      time: '14:20',
-      isRead: true,
-    ),
-    _ChatMessage(
-      text:
-          'Chào Minh Khôi, mình muốn hỏi về việc check-in. Nhà mình có thể nhận phòng sớm được không ạ?',
-      isOutgoing: true,
-      time: '14:22',
-      isRead: true,
-    ),
-    _ChatMessage(
-      text:
-          'Dạ được chứ! Hiện tại phòng đang trống nên bạn có thể check-in sớm từ lúc 12:00 nhé.',
-      isOutgoing: false,
-      time: '14:23',
-      isRead: true,
-    ),
-    _ChatMessage(
-      text:
-          'Tôi sẽ chuẩn bị trà và một ít bánh đặc sản địa phương để chào đón bạn.',
-      isOutgoing: false,
-      time: '14:24',
-      isRead: true,
-    ),
-  ];
+  
+  String? _roomId;
+  String? _otherUserId;
+  String? _otherUserName;
+  String? _otherUserAvatar;
+  UserEntity? _currentUser;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom();
-    });
-  }
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      _roomId = args['roomId'];
+      _otherUserId = args['otherUserId'];
+      _otherUserName = args['otherUserName'];
+      _otherUserAvatar = args['otherUserAvatar'];
+    }
 
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+    final authState = context.read<AuthBloc>().state;
+    if (authState is Authenticated) {
+      _currentUser = authState.user;
+      
+      // Đánh dấu đã xem khi vào phòng chat
+      if (_roomId != null) {
+        _messageRepository.markAsRead(_roomId!, _currentUser!.id);
+      }
     }
   }
 
   void _sendMessage() {
     final text = _messageController.text.trim();
-    if (text.isEmpty) return;
-    setState(() {
-      _messages.add(_ChatMessage(
-        text: text,
-        isOutgoing: true,
-        time:
-            '${TimeOfDay.now().hour.toString().padLeft(2, '0')}:${TimeOfDay.now().minute.toString().padLeft(2, '0')}',
-        isRead: false,
-      ));
-    });
+    if (text.isEmpty || _roomId == null || _currentUser == null || _otherUserId == null) return;
+    
+    _messageRepository.sendMessage(
+      _roomId!,
+      _currentUser!.id,
+      _otherUserId!,
+      text,
+    );
+    
     _messageController.clear();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom();
-    });
   }
 
   @override
@@ -98,34 +74,58 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_roomId == null || _currentUser == null) {
+      return const Scaffold(body: Center(child: Text('Không tìm thấy phòng chat.')));
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
           // ===== TOP APP BAR =====
           _ChatAppBar(
+            name: _otherUserName ?? 'Chủ nhà',
+            avatarUrl: _otherUserAvatar,
             onBackTap: () => Navigator.of(context).pop(),
           ),
-          // ===== CHAT MESSAGES =====
+          // ===== CHAT MESSAGES Realtime =====
           Expanded(
-            child: ListView.separated(
-              controller: _scrollController,
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.md,
-              ),
-              itemCount: _messages.length + 1, // +1 for date divider
-              separatorBuilder: (_, __) =>
-                  const SizedBox(height: AppSpacing.md),
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return const _DateDivider(label: 'Hôm nay');
+            child: StreamBuilder<List<MessageEntity>>(
+              stream: _messageRepository.getMessages(_roomId!),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
                 }
-                final msg = _messages[index - 1];
-                return msg.isOutgoing
-                    ? _OutgoingBubble(message: msg)
-                    : _IncomingBubble(message: msg);
+                
+                if (snapshot.hasError) {
+                  return Center(child: Text('Lỗi: ${snapshot.error}'));
+                }
+
+                final messages = snapshot.data ?? [];
+                
+                return ListView.separated(
+                  controller: _scrollController,
+                  reverse: true, // Tin nhắn mới nhất ở dưới
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.md,
+                  ),
+                  itemCount: messages.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSpacing.md),
+                  itemBuilder: (context, index) {
+                    final msg = messages[index];
+                    final isOutgoing = msg.senderId == _currentUser!.id;
+                    
+                    return isOutgoing
+                        ? _OutgoingBubble(message: msg)
+                        : _IncomingBubble(
+                            message: msg,
+                            avatarUrl: _otherUserAvatar,
+                          );
+                  },
+                );
               },
             ),
           ),
@@ -141,8 +141,15 @@ class _ChatScreenState extends State<ChatScreen> {
 }
 
 class _ChatAppBar extends StatelessWidget {
+  final String name;
+  final String? avatarUrl;
   final VoidCallback? onBackTap;
-  const _ChatAppBar({this.onBackTap});
+  
+  const _ChatAppBar({
+    required this.name,
+    this.avatarUrl,
+    this.onBackTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -164,36 +171,26 @@ class _ChatAppBar extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Back button
               IconButton(
                 onPressed: onBackTap,
                 icon: const Icon(Icons.arrow_back,
                     color: AppColors.onSurface),
-                style: IconButton.styleFrom(
-                  minimumSize: const Size(
-                      AppTouchTarget.minSize, AppTouchTarget.minSize),
-                ),
               ),
               const SizedBox(width: 4),
-              // Host avatar with online indicator
               Stack(
                 children: [
                   ClipOval(
                     child: SizedBox(
                       width: 40,
                       height: 40,
-                      child: Image.network(
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuBwozORqRy0O4Jg0TBxrG_D6N3cIOgy3QVCi5nqyUsrlCrldx4OJuoP7vcVwlRvyD1iY4DBw79n7YMUFxdMll8ADpkbvnWLG2hQFRoHyaix7uQttYYfeJG27-RsDGfpo3bFFpKikKR0HCMg2a8xSD9vg1BfEwCuGUxtMWsOWaoOKV2xaCAfAt1Gm_94HhQ7i6_NIaXirssgN6s4ww9LrGBpOkOsr7QvRpDWqcjyWJq6xCiifR8U9_9qJ9n2_jEoxxFF9lMgKz42wG0',
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const CircleAvatar(
-                          backgroundColor: AppColors.surfaceContainerHigh,
-                          child: Icon(Icons.person,
-                              color: AppColors.outline),
-                        ),
-                      ),
+                      child: avatarUrl != null && avatarUrl!.isNotEmpty
+                        ? Image.network(avatarUrl!, fit: BoxFit.cover)
+                        : const CircleAvatar(
+                            backgroundColor: AppColors.surfaceContainerHigh,
+                            child: Icon(Icons.person, color: AppColors.outline),
+                          ),
                     ),
                   ),
-                  // Online dot
                   Positioned(
                     right: 0,
                     bottom: 0,
@@ -203,22 +200,20 @@ class _ChatAppBar extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.green,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                            color: AppColors.surface, width: 2),
+                        border: Border.all(color: AppColors.surface, width: 2),
                       ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(width: AppSpacing.sm),
-              // Name + status
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Minh Khôi',
+                      name,
                       style: AppTextStyles.titleLg.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
@@ -234,15 +229,9 @@ class _ChatAppBar extends StatelessWidget {
                   ],
                 ),
               ),
-              // More options
               IconButton(
                 onPressed: () {},
-                icon: const Icon(Icons.more_vert,
-                    color: AppColors.onSurface),
-                style: IconButton.styleFrom(
-                  minimumSize: const Size(
-                      AppTouchTarget.minSize, AppTouchTarget.minSize),
-                ),
+                icon: const Icon(Icons.more_vert, color: AppColors.onSurface),
               ),
             ],
           ),
@@ -252,34 +241,14 @@ class _ChatAppBar extends StatelessWidget {
   }
 }
 
-class _DateDivider extends StatelessWidget {
-  final String label;
-  const _DateDivider({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(AppRadius.full),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.labelMd.copyWith(
-            color: AppColors.onSurfaceVariant,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _IncomingBubble extends StatelessWidget {
-  final _ChatMessage message;
-  const _IncomingBubble({required this.message});
+  final MessageEntity message;
+  final String? avatarUrl;
+  
+  const _IncomingBubble({
+    required this.message,
+    this.avatarUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -290,16 +259,13 @@ class _IncomingBubble extends StatelessWidget {
           child: SizedBox(
             width: 30,
             height: 30,
-            child: Image.network(
-              'https://lh3.googleusercontent.com/aida-public/AB6AXuB31srvyfCmUUyXUd13Uq1CEPEb-st5fMEWopn4Dda6qZs9-F01ZV-r6qAzR1Z3tyKDNPQnIL01VFSSz4VHycMhhl6WbX6Dm6jO-cO2BR7Cz-lo5iWBerNdKv_gUI-sCXem6vGa3EVlcrjhmoosgA2TAKDoULJVuLjVVc8o-zSvxFAZas9-M7fnY82IAT0R5Ok-HS_ivQnPivSOW-XMsCndHZ2I7Lg5ZNO9n_zve1IdbPCoEUi--r9SirjRufh3EarTBbLpqK_b_uw',
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const CircleAvatar(
-                radius: 15,
-                backgroundColor: AppColors.surfaceContainerHigh,
-                child: Icon(Icons.person, size: 14,
-                    color: AppColors.outline),
-              ),
-            ),
+            child: avatarUrl != null && avatarUrl!.isNotEmpty
+              ? Image.network(avatarUrl!, fit: BoxFit.cover)
+              : const CircleAvatar(
+                  radius: 15,
+                  backgroundColor: AppColors.surfaceContainerHigh,
+                  child: Icon(Icons.person, size: 14, color: AppColors.outline),
+                ),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -320,29 +286,17 @@ class _IncomingBubble extends StatelessWidget {
                     bottomLeft: Radius.circular(4),
                     bottomRight: Radius.circular(AppRadius.xxl),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                    ),
-                  ],
                 ),
                 child: Text(
-                  message.text,
-                  style: AppTextStyles.bodyMd
-                      .copyWith(color: AppColors.onSurface),
+                  message.content,
+                  style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurface),
                 ),
               ),
             ),
             const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.only(left: 4),
-              child: Text(
-                message.time,
-                style: AppTextStyles.labelMd.copyWith(
-                  color: AppColors.outline,
-                ),
-              ),
+            Text(
+              '${message.timestamp.hour}:${message.timestamp.minute.toString().padLeft(2, '0')}',
+              style: AppTextStyles.labelMd.copyWith(color: AppColors.outline),
             ),
           ],
         ),
@@ -352,7 +306,7 @@ class _IncomingBubble extends StatelessWidget {
 }
 
 class _OutgoingBubble extends StatelessWidget {
-  final _ChatMessage message;
+  final MessageEntity message;
   const _OutgoingBubble({required this.message});
 
   @override
@@ -378,9 +332,8 @@ class _OutgoingBubble extends StatelessWidget {
                 ),
               ),
               child: Text(
-                message.text,
-                style: AppTextStyles.bodyMd
-                    .copyWith(color: AppColors.onPrimary),
+                message.content,
+                style: AppTextStyles.bodyMd.copyWith(color: AppColors.onPrimary),
               ),
             ),
           ),
@@ -389,20 +342,14 @@ class _OutgoingBubble extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                message.time,
-                style: AppTextStyles.labelMd.copyWith(
-                  color: AppColors.outline,
-                ),
+                '${message.timestamp.hour}:${message.timestamp.minute.toString().padLeft(2, '0')}',
+                style: AppTextStyles.labelMd.copyWith(color: AppColors.outline),
               ),
               const SizedBox(width: 4),
               Icon(
-                message.isRead
-                    ? Icons.done_all
-                    : Icons.done,
+                message.isRead ? Icons.done_all : Icons.done,
                 size: 14,
-                color: message.isRead
-                    ? AppColors.primary
-                    : AppColors.outline,
+                color: message.isRead ? AppColors.primary : AppColors.outline,
               ),
             ],
           ),
@@ -429,78 +376,45 @@ class _ChatInputBar extends StatelessWidget {
               horizontal: AppSpacing.md, vertical: AppSpacing.md),
           child: Row(
             children: [
-              // Add button
               IconButton(
                 onPressed: () {},
                 icon: const Icon(Icons.add_circle_outline,
                     color: AppColors.primary, size: 28),
-                style: IconButton.styleFrom(
-                  minimumSize: const Size(
-                      AppTouchTarget.minSize, AppTouchTarget.minSize),
-                ),
               ),
-              // Text Input
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.md, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceContainerHighest,
-                    borderRadius:
-                        BorderRadius.circular(AppRadius.full),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: controller,
-                          style: AppTextStyles.bodyMd
-                              .copyWith(color: AppColors.onSurface),
-                          decoration: InputDecoration(
-                            hintText: 'Nhập tin nhắn...',
-                            hintStyle: AppTextStyles.bodyMd.copyWith(
-                              color: AppColors.outlineVariant,
-                            ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                                vertical: 8),
-                          ),
-                          onSubmitted: (_) => onSend(),
-                        ),
+                  child: TextField(
+                    controller: controller,
+                    style: AppTextStyles.bodyMd.copyWith(color: AppColors.onSurface),
+                    decoration: InputDecoration(
+                      hintText: 'Nhập tin nhắn...',
+                      hintStyle: AppTextStyles.bodyMd.copyWith(
+                        color: AppColors.outlineVariant,
                       ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: const Icon(
-                          Icons.sentiment_satisfied_outlined,
-                          color: AppColors.onSurfaceVariant,
-                          size: 22,
-                        ),
-                      ),
-                    ],
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    onSubmitted: (_) => onSend(),
                   ),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              // Send button
               GestureDetector(
                 onTap: onSend,
                 child: Container(
-                  width: AppTouchTarget.minSize,
-                  height: AppTouchTarget.minSize,
+                  width: 48,
+                  height: 48,
                   decoration: const BoxDecoration(
                     color: AppColors.primary,
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0x33000666),
-                        blurRadius: 8,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
                   ),
-                  child: const Icon(Icons.send,
-                      color: AppColors.onPrimary, size: 20),
+                  child: const Icon(Icons.send, color: AppColors.onPrimary, size: 20),
                 ),
               ),
             ],
@@ -511,13 +425,4 @@ class _ChatInputBar extends StatelessWidget {
   }
 }
 
-class _ChatMessage {
-  final String text, time;
-  final bool isOutgoing, isRead;
-  const _ChatMessage({
-    required this.text,
-    required this.isOutgoing,
-    required this.time,
-    required this.isRead,
-  });
-}
+

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -20,21 +21,24 @@ class AuthException implements Exception {
 class FirebaseUserRepository implements UserRepository {
   FirebaseUserRepository({
     firebase_auth.FirebaseAuth? firebaseAuth,
+    FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
   })  : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance,
         _googleSignIn = googleSignIn ??
             GoogleSignIn(
               serverClientId: _googleWebClientId,
             );
 
   final firebase_auth.FirebaseAuth _firebaseAuth;
+  final FirebaseFirestore _firestore;
   final GoogleSignIn _googleSignIn;
 
   @override
   Future<UserEntity> getCurrentUser() async {
     final user = _firebaseAuth.currentUser;
     if (user != null) {
-      return _toUserModel(user);
+      return _getUserFromFirestore(user.uid);
     }
     throw const AuthException('Chua co nguoi dung dang nhap.');
   }
@@ -43,6 +47,7 @@ class FirebaseUserRepository implements UserRepository {
   Future<UserEntity> login(String email, String password) async {
     final normalizedEmail = _normalizeEmail(email);
 
+    // Đăng nhập bằng Firebase
     try {
       final credential = await _firebaseAuth.signInWithEmailAndPassword(
         email: normalizedEmail,
@@ -50,7 +55,7 @@ class FirebaseUserRepository implements UserRepository {
       );
       final user = credential.user;
       if (user == null) {
-        throw const AuthException('Khong the dang nhap tai khoan Firebase.');
+        throw const AuthException('Không thể đăng nhập tài khoản Firebase.');
       }
 
       // Kiểm tra email đã xác thực chưa
@@ -61,7 +66,7 @@ class FirebaseUserRepository implements UserRepository {
             'Vui lòng xác thực email của bạn trước khi đăng nhập. Hãy kiểm tra hộp thư đến.');
       }
 
-      return _toUserModel(user);
+      return await _getUserFromFirestore(user.uid);
     } on firebase_auth.FirebaseAuthException catch (error) {
       throw AuthException(_mapFirebaseAuthError(error));
     }
@@ -87,7 +92,7 @@ class FirebaseUserRepository implements UserRepository {
       if (user == null) {
         throw const AuthException('Khong the dang nhap Google.');
       }
-      return _toUserModel(user);
+      return await _getUserFromFirestore(user.uid);
     } on firebase_auth.FirebaseAuthException catch (error) {
       throw AuthException(_mapFirebaseAuthError(error));
     } catch (error) {
@@ -120,15 +125,49 @@ class FirebaseUserRepository implements UserRepository {
         throw const AuthException('Khong the tao tai khoan Firebase.');
       }
 
+      // Default role for new users is customer
+      final newUser = UserModel(
+        id: user.uid,
+        name: name.trim(),
+        email: normalizedEmail,
+        avatarUrl: '',
+        role: UserRole.customer,
+      );
+
+      await _firestore.collection('users').doc(user.uid).set(newUser.toJson());
+
+
       // Tự động gửi email xác thực ngay sau khi đăng ký
       await user.sendEmailVerification();
 
       await user.updateDisplayName(name.trim());
       await user.reload();
-      return _toUserModel(_firebaseAuth.currentUser ?? user, fallbackName: name);
+
+      return newUser;
     } on firebase_auth.FirebaseAuthException catch (error) {
       throw AuthException(_mapFirebaseAuthError(error));
     }
+  }
+
+  Future<UserEntity> _getUserFromFirestore(String uid) async {
+    final doc = await _firestore.collection('users').doc(uid).get();
+    if (doc.exists && doc.data() != null) {
+      return UserModel.fromJson(doc.data()!);
+    }
+
+    // Fallback if user exists in Auth but not in Firestore (should not happen normally)
+    final user = _firebaseAuth.currentUser;
+    if (user != null && user.uid == uid) {
+      return UserModel(
+        id: user.uid,
+        name: user.displayName ?? user.email ?? 'User',
+        email: user.email ?? '',
+        avatarUrl: user.photoURL ?? '',
+        role: UserRole.customer, // Default fallback
+      );
+    }
+
+    throw const AuthException('Không tìm thấy thông tin người dùng.');
   }
 
   @override
@@ -155,13 +194,7 @@ class FirebaseUserRepository implements UserRepository {
     required String otp,
     required String newPassword,
   }) async {
-    final normalizedEmail = _normalizeEmail(email);
-
     try {
-      final resetEmail = await _firebaseAuth.verifyPasswordResetCode(otp.trim());
-      if (_normalizeEmail(resetEmail) != normalizedEmail) {
-        throw const AuthException('Ma dat lai mat khau khong thuoc email nay.');
-      }
       await _firebaseAuth.confirmPasswordReset(
         code: otp.trim(),
         newPassword: newPassword,
@@ -177,34 +210,15 @@ class FirebaseUserRepository implements UserRepository {
     await _googleSignIn.signOut();
   }
 
-  UserModel _toUserModel(
-    firebase_auth.User user, {
-    String? fallbackName,
-  }) {
-    final email = user.email ?? '';
-    final displayName = user.displayName?.trim();
-    final fallbackDisplayName = fallbackName?.trim();
-
-    return UserModel(
-      id: user.uid,
-      name: displayName?.isNotEmpty == true
-          ? displayName!
-          : fallbackDisplayName?.isNotEmpty == true
-              ? fallbackDisplayName!
-              : email,
-      email: email,
-      avatarUrl: user.photoURL ?? '',
-    );
-  }
-
   String _mapFirebaseAuthError(firebase_auth.FirebaseAuthException error) {
     switch (error.code) {
       case 'invalid-email':
         return 'Email khong hop le.';
       case 'user-not-found':
       case 'invalid-credential':
+        return 'Email chua duoc dang ky hoac mat khau khong dung.';
       case 'wrong-password':
-        return 'Sai tai khoan hoac mat khau.';
+        return 'Mat khau khong dung.';
       case 'email-already-in-use':
         return 'Email nay da ton tai tren Firebase.';
       case 'weak-password':

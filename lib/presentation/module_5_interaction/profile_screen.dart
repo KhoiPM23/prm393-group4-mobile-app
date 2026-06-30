@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../blocs/auth/auth_bloc.dart';
+import '../blocs/auth/auth_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
@@ -217,100 +220,106 @@ class _ProfileAppBar extends StatelessWidget {
 class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.displayName?.trim().isNotEmpty == true
-        ? user!.displayName!.trim()
-        : 'VibeLocals User';
-    final email = user?.email ?? 'Dang nhap bang Firebase';
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        String name = 'Khách';
+        String email = '';
+        String uid = '';
+        if (state is Authenticated) {
+          name = state.user.name;
+          email = state.user.email;
+          uid = state.user.id;
+        }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(
-            color: AppColors.outlineVariant.withValues(alpha: 0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
+        return Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(
+                color: AppColors.outlineVariant.withValues(alpha: 0.1)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 4,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Avatar with edit button
-          Stack(
+          child: Column(
             children: [
-              Container(
-                width: 112,
-                height: 112,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                      color: AppColors.surface, width: 4),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 12,
+              // Avatar with edit button
+              Stack(
+                children: [
+                  Container(
+                    width: 112,
+                    height: 112,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: AppColors.surface, width: 4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 12,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: Image.network(
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuC_vmSj0rgrsNCQfKQxAou_Hwu6IBpNx5Niw1DnuUZRWFSjtHwmMU2w2Kqe-sKoygZPscetd1pTz7GrKJA2z5EeRj4MsgP9WlCcoBu_tRby-hHP5lB9ThToMBkxnoAHaiK8YzQj6wTD3x-dzhsbU5OFrrcpZpg2oSACOZuNnns0p3G164mW5Nlczp8YiqDYrgPfeLOS0uhb3cWo-lgpGgMdHlkSHC_t2D5jPlZrD1cFGAeCjQCvQXBemuhHyb4imIkH7pzA3T3-Eno',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const CircleAvatar(
+                    child: const CircleAvatar(
                       backgroundColor: AppColors.surfaceContainerHigh,
                       child: Icon(Icons.person,
                           size: 56, color: AppColors.outline),
                     ),
                   ),
+                  Positioned(
+                    right: 4,
+                    bottom: 4,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.edit,
+                          color: AppColors.onPrimary, size: 16),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                name,
+                style: AppTextStyles.headlineLgMobile.copyWith(
+                  color: AppColors.primary,
                 ),
               ),
-              Positioned(
-                right: 4,
-                bottom: 4,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: const BoxDecoration(
+              const SizedBox(height: 4),
+              Text(
+                email,
+                style: AppTextStyles.bodyMd.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SelectableText(
+                'ID thật: $uid',
+                style: AppTextStyles.labelMd.copyWith(color: AppColors.outline, fontSize: 10),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              TextButton(
+                onPressed: () {},
+                child: Text(
+                  'Chỉnh sửa',
+                  style: AppTextStyles.labelLg.copyWith(
                     color: AppColors.primary,
-                    shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.edit,
-                      color: AppColors.onPrimary, size: 16),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            displayName,
-            style: AppTextStyles.headlineLgMobile.copyWith(
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            email,
-            style: AppTextStyles.bodyMd.copyWith(
-              color: AppColors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          TextButton(
-            onPressed: () {},
-            child: Text(
-              'Chỉnh sửa',
-              style: AppTextStyles.labelLg.copyWith(
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

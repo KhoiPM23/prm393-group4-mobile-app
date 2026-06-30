@@ -53,13 +53,20 @@ class _PropertyCardState extends State<PropertyCard>
   }
 
   @override
+  void didUpdateWidget(PropertyCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isFavorite != widget.isFavorite) {
+      _isFavorite = widget.isFavorite;
+    }
+  }
+
+  @override
   void dispose() {
     _scaleController.dispose();
     super.dispose();
   }
 
   void _handleFavorite() {
-    setState(() => _isFavorite = !_isFavorite);
     widget.onFavoriteToggle?.call();
     _scaleController.reverse().then((_) => _scaleController.forward());
   }
