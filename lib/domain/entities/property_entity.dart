@@ -7,6 +7,7 @@ class PropertyEntity {
   final double pricePerNight;
   final double rating;
   final int reviewsCount;
+  final String hostId;
   final String hostName;
   final String hostAvatar;
   final List<String> imageUrls;
@@ -27,6 +28,7 @@ class PropertyEntity {
     required this.pricePerNight,
     required this.rating,
     required this.reviewsCount,
+    required this.hostId,
     required this.hostName,
     required this.hostAvatar,
     required this.imageUrls,

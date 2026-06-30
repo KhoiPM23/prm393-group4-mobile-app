@@ -10,6 +10,10 @@ import '../module_2_explore/cubit/wishlist_cubit.dart';
 import '../widgets/vibe_cards.dart';
 import '../widgets/vibe_ui_components.dart';
 
+import '../blocs/auth/auth_bloc.dart';
+import '../blocs/auth/auth_state.dart';
+import '../../data/repositories/firebase_message_repository.dart';
+
 /// Màn hình Chi tiết Địa điểm VibeLocals
 /// Route: /property-detail
 class PropertyDetailScreen extends StatefulWidget {
@@ -56,6 +60,65 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     super.dispose();
   }
 
+  void _handleChat(BuildContext context, PropertyEntity p) async {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! Authenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng đăng nhập để chat với chủ nhà.')),
+      );
+      Navigator.of(context).pushNamed('/login');
+      return;
+    }
+
+    final currentUser = authState.user;
+    if (currentUser.id == p.hostId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bạn không thể chat với chính mình.')),
+      );
+      return;
+    }
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final messageRepo = FirebaseMessageRepository();
+      final roomId = await messageRepo.getOrCreateChatRoom(
+        currentUser.id,
+        p.hostId,
+        user1Name: currentUser.name,
+        user2Name: p.hostName,
+        user1Avatar: currentUser.avatarUrl,
+        user2Avatar: p.hostAvatar,
+        extraMetadata: {
+          'propertyTitle': p.title,
+          'propertyImage': p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
+        },
+      );
+
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading
+        Navigator.of(context).pushNamed('/chat', arguments: {
+          'roomId': roomId,
+          'otherUserId': p.hostId,
+          'otherUserName': p.hostName,
+          'otherUserAvatar': p.hostAvatar,
+        });
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_property == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -86,8 +149,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       right: AppSpacing.md,
                       child: _PropertyInfoCard(
                         property: p,
-                        onChatTap: () =>
-                            Navigator.of(context).pushNamed('/chat'),
+                        onChatTap: () => _handleChat(context, p),
                       ),
                     ),
                   ],

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/user_entity.dart';
+import '../blocs/auth/auth_bloc.dart';
+import '../blocs/auth/auth_event.dart';
 import '../../data/repositories/firebase_user_repository.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
@@ -73,13 +77,22 @@ class _RegisterScreenState extends State<RegisterScreen>
     }
     setState(() => _isLoading = true);
     try {
-      await _userRepository.register(
+      final user = await _userRepository.register(
         name: _nameController.text,
         email: _emailController.text,
         password: _passwordController.text,
       );
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/home');
+      
+      // Update global Auth state
+      context.read<AuthBloc>().add(AuthUserChanged(user));
+
+      // Navigate based on role (default is customer for register)
+      if (user.role == UserRole.host) {
+        Navigator.of(context).pushReplacementNamed('/inbox');
+      } else {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
     } on AuthException catch (error) {
       if (!mounted) return;
       _showMessage(error.message, isError: true);

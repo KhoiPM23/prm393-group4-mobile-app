@@ -5,11 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/theme/app_theme.dart';
 import 'data/datasources/local/app_database.dart';
+import 'data/repositories/firebase_user_repository.dart';
 import 'data/repositories/mock_property_repository.dart';
 import 'data/repositories/search_history_repository_impl.dart';
 import 'data/repositories/wishlist_repository_impl.dart';
 import 'domain/repositories/search_history_repository.dart';
 import 'domain/repositories/wishlist_repository.dart';
+import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/module_1_auth/forgot_password_screen.dart';
 // Auth screens
 import 'presentation/module_1_auth/login_screen.dart';
@@ -27,6 +29,8 @@ import 'presentation/module_4_booking/booking_confirm_screen.dart';
 import 'presentation/module_4_booking/property_detail_screen.dart';
 // Interaction screens
 import 'presentation/module_5_interaction/chat_screen.dart';
+import 'presentation/module_5_interaction/host_dashboard_screen.dart';
+import 'presentation/module_5_interaction/inbox_screen.dart';
 import 'presentation/module_5_interaction/notification_center_screen.dart';
 import 'presentation/module_5_interaction/profile_screen.dart';
 
@@ -51,7 +55,12 @@ Future<void> main() async {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(const VibeLocalsApp());
+  runApp(
+    BlocProvider(
+      create: (context) => AuthBloc(userRepository: FirebaseUserRepository()),
+      child: const VibeLocalsApp(),
+    ),
+  );
 }
 
 /// VibeLocals - Sang trọng & Bản sắc
@@ -121,7 +130,6 @@ class VibeLocalsApp extends StatelessWidget {
                 },
               );
             }
-
             // Fallback for any undefined routes
             return MaterialPageRoute(
               builder: (_) => const LoginScreen(),

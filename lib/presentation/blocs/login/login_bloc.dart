@@ -21,12 +21,12 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   ) async {
     emit(LoginLoading());
     try {
-      await _userRepository.login(event.email, event.password);
-      emit(LoginSuccess());
+      final user = await _userRepository.login(event.email, event.password);
+      emit(LoginSuccess(user: user));
     } on AuthException catch (error) {
       emit(LoginFailure(error: error.message));
     } catch (_) {
-      emit(LoginFailure(error: 'Dang nhap that bai. Vui long thu lai.'));
+      emit(LoginFailure(error: 'Đăng nhập thất bại. Vui lòng thử lại.'));
     }
   }
 
@@ -41,7 +41,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         emit(LoginInitial());
         return;
       }
-      emit(LoginSuccess());
+      emit(LoginSuccess(user: user));
     } on AuthException catch (error) {
       emit(LoginFailure(error: error.message));
     } catch (_) {
