@@ -5,7 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../data/repositories/firebase_user_repository.dart';
-import '../../data/repositories/mock_user_repository.dart';
+// import '../../data/repositories/mock_user_repository.dart';
 import '../../domain/entities/user_entity.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_bloc.dart';
@@ -68,6 +68,10 @@ class _LoginScreenState extends State<LoginScreen>
             password: _passwordController.text,
           ),
         );
+  }
+
+  void _submitGoogle(BuildContext blocContext) {
+    blocContext.read<LoginBloc>().add(GoogleLoginSubmitted());
   }
 
   void _showError(String message) {
@@ -210,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen>
                                       if (v == null || v.isEmpty) {
                                         return 'Vui lòng nhập email';
                                       }
-                                      if (!MockUserRepository.isValidEmail(v)) {
+                                      if (!FirebaseUserRepository.isValidEmail(v)) {
                                         return 'Email không hợp lệ';
                                       }
                                       return null;
@@ -239,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen>
                                       if (v == null || v.isEmpty) {
                                         return 'Vui lòng nhập mật khẩu';
                                       }
-                                      if (!MockUserRepository.isValidPassword(v)) {
+                                      if (!FirebaseUserRepository.isValidPassword(v)) {
                                         return 'Mật khẩu ít nhất 8 ký tự và có 1 chữ cái';
                                       }
                                       return null;
@@ -300,7 +304,9 @@ class _LoginScreenState extends State<LoginScreen>
                                   _SocialLoginButton(
                                     label: 'Tiếp tục với Google',
                                     icon: Icons.g_mobiledata_rounded,
-                                    onTap: () {},
+                                    onTap: isLoading
+                                        ? null
+                                        : () => _submitGoogle(context),
                                   ),
                                   const SizedBox(height: AppSpacing.xxl),
                                   Row(
@@ -345,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen>
 class _SocialLoginButton extends StatelessWidget {
   final String label;
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _SocialLoginButton({
     required this.label,

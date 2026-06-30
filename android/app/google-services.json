@@ -12,7 +12,28 @@
           "package_name": "com.example.hotelbookingapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "992573755019-bi0pvjkpg0a18qfbhegbo2punhp6biob.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hotelbookingapp",
+            "certificate_hash": "06fd2b71d3a5605489d6fba99bdb52a129384b6c"
+          }
+        },
+        {
+          "client_id": "992573755019-h98a2210foovies8ptnsa46rt84a1rvc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hotelbookingapp",
+            "certificate_hash": "53dec1526f9c61387edaf7e89f15cbeebdf2749c"
+          }
+        },
+        {
+          "client_id": "992573755019-f5glbtqm32qumhp882ca8g6cba3ijhd9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDkaYtJx8TjlAuuUA0wfgV5trWhXn5GkvY"
@@ -20,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "992573755019-f5glbtqm32qumhp882ca8g6cba3ijhd9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

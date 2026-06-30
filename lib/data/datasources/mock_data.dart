@@ -42,6 +42,8 @@ class MockData {
           'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
           'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688',
           'https://images.unsplash.com/photo-1493809842364-78817add7ffb',
+          'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2',
+          'https://images.unsplash.com/photo-1484154218962-a197022b5858',
         ],
         'amenities': ['Khu BBQ', 'Báo khí CO', 'Lò sưởi trong nhà', 'Ban công', 'Cho phép thú cưng', 'Bồn tắm', 'Máy sấy tóc', 'Ăn sáng', 'View biển', 'Wifi', 'Bếp', 'Hồ bơi', 'Chỗ đậu xe', 'Máy lạnh', 'Bàn ủi', 'Lò sưởi', 'Máy giặt'],
         'description':
@@ -105,15 +107,6 @@ class MockData {
             'amenities': ['Bàn ủi', 'Lò sưởi', 'Hồ bơi', 'Máy sấy tóc'],
             'imageUrls': ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b'],
             'description': 'Thức dậy với tiếng sóng vỗ rì rào.'
-          },
-          {
-            'id': 'r2_p2',
-            'title': 'Villa Cận Biển 3 Phòng Ngủ',
-            'type': 'Villa',
-            'pricePerNight': 7500000.0,
-            'amenities': ['Báo khí CO', 'Bàn làm việc', 'Bồn tắm', 'Ban công', 'Khu BBQ'],
-            'imageUrls': ['https://images.unsplash.com/photo-1542314831-068cd1dbfeeb'],
-            'description': 'Đỉnh cao của sự sang trọng và riêng tư.'
           }
         ]
       },
@@ -236,7 +229,7 @@ class MockData {
         'hostAvatar':
             'https://lh3.googleusercontent.com/aida-public/AB6AXuBwozORqRy0O4Jg0TBxrG_D6N3cIOgy3QVCi5nqyUsrlCrldx4OJuoP7vcVwlRvyD1iY4DBw79n7YMUFxdMll8ADpkbvnWLG2hQFRoHyaix7uQttYYfeJG27-RsDGfpo3bFFpKikKR0HCMg2a8xSD9vg1BfEwCuGUxtMWsOWaoOKV2xaCAfAt1Gm_94HhQ7i6_NIaXirssgN6s4ww9LrGBpOkOsr7QvRpDWqcjyWJq6xCiifR8U9_9qJ9n2_jEoxxFF9lMgKz42wG0',
         'imageUrls': [
-          'https://images.unsplash.com/photo-1582719478250-c8940ce97ae3', 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304'
+          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b', 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304'
         ],
         'amenities': ['Khu BBQ', 'Báo khí CO', 'Bàn làm việc', 'Máy giặt', 'Lò sưởi', 'Wifi', 'Bàn ủi', 'Bếp', 'Hồ bơi', 'Máy sấy tóc'],
         'description':
@@ -344,7 +337,7 @@ class MockData {
         'amenities': ['Bồn tắm', 'Ban công', 'Máy sấy tóc', 'Lò sưởi trong nhà', 'Ăn sáng', 'Chỗ đậu xe', 'Bàn ủi', 'Bếp', 'Khu BBQ', 'Gym', 'Wifi', 'Báo khí CO', 'Báo khói', 'Máy giặt', 'Bàn làm việc', 'Lò sưởi', 'View biển'],
         'description': 'Khu nghỉ dưỡng 5 sao mang đậm phong cách Hàn Quốc kết hợp với nét duyên dáng của miền Trung Việt Nam.',
         'categories': ['Resort', 'Gần biển'],
-        'latitude': 15.9328,
+        'latitude': 15.9328, // Tọa độ Điện Bàn
         'longitude': 108.3185,
         'city': 'Quảng Nam',
         'district': 'Điện Bàn',
@@ -355,7 +348,7 @@ class MockData {
             'type': 'Double',
             'pricePerNight': 3500000.0,
             'amenities': ['Lò sưởi', 'Ban công', 'Gym', 'Bàn làm việc', 'Báo khí CO', 'Máy giặt', 'Bồn tắm'],
-            'imageUrls': ['https://images.unsplash.com/photo-1582719508461-905c673771fd'],
+            'imageUrls': ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b'],
             'description': 'Phòng nghỉ sang trọng với tầm nhìn hướng ra đại dương.'
           }
         ]
@@ -378,7 +371,7 @@ class MockData {
         'amenities': ['View biển', 'Gym', 'Bàn ủi', 'Lò sưởi', 'Ban công', 'Máy sấy tóc', 'Cho phép thú cưng', 'Bồn tắm', 'Máy giặt', 'Lò sưởi trong nhà', 'Báo khí CO'],
         'description': 'Nơi trú ẩn hoàn hảo kết hợp giữa văn hóa Việt Nam truyền thống và kiến trúc tre đương đại.',
         'categories': ['Resort', 'Chăm sóc sức khỏe'],
-        'latitude': 15.9866,
+        'latitude': 15.9866, // Tọa độ Ngũ Hành Sơn
         'longitude': 108.2831,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
@@ -412,7 +405,7 @@ class MockData {
         'amenities': ['Máy sấy tóc', 'Bàn ủi', 'Khu BBQ', 'Báo khói', 'Lò sưởi', 'Bếp', 'Gym', 'Wifi', 'Máy lạnh', 'Chỗ đậu xe', 'Cho phép thú cưng', 'Máy giặt', 'View biển', 'Lò sưởi trong nhà', 'Báo khí CO', 'Hồ bơi', 'Ăn sáng'],
         'description': 'Khu nghỉ dưỡng di sản đầu tiên tại Việt Nam mang đậm phong cách Chăm Pa.',
         'categories': ['Resort', 'Sang trọng'],
-        'latitude': 16.0357,
+        'latitude': 16.0357, // Tọa độ Ngũ Hành Sơn
         'longitude': 108.2505,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
@@ -446,7 +439,7 @@ class MockData {
         'amenities': ['Báo khí CO', 'Wifi', 'Báo khói', 'Bàn ủi', 'Chỗ đậu xe', 'Máy lạnh', 'View biển', 'Máy giặt', 'Cho phép thú cưng', 'Bếp', 'Ban công', 'Khu BBQ', 'Lò sưởi', 'Gym', 'Hồ bơi', 'Ăn sáng', 'Máy sấy tóc', 'Bồn tắm'],
         'description': 'Thiên đường nghỉ dưỡng lý tưởng cho gia đình với hồ bơi cát mô phỏng bãi biển thu nhỏ.',
         'categories': ['Gia đình', 'Resort'],
-        'latitude': 16.0163,
+        'latitude': 16.0163, // Tọa độ Ngũ Hành Sơn
         'longitude': 108.2612,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
@@ -480,7 +473,7 @@ class MockData {
         'amenities': ['Báo khói', 'Cho phép thú cưng', 'Lò sưởi', 'Lò sưởi trong nhà', 'Wifi', 'Máy giặt', 'Gym', 'Ăn sáng', 'Khu BBQ', 'Máy sấy tóc', 'View biển', 'Bàn ủi', 'Bồn tắm', 'Ban công', 'Hồ bơi', 'Bàn làm việc', 'Chỗ đậu xe'],
         'description': 'Khu nghỉ dưỡng quốc tế nằm nép mình dưới chân ngọn núi Ngũ Hành Sơn hùng vĩ.',
         'categories': ['Resort', 'Cặp đôi'],
-        'latitude': 16.0084,
+        'latitude': 16.0084, // Tọa độ Ngũ Hành Sơn
         'longitude': 108.2655,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
@@ -514,7 +507,7 @@ class MockData {
         'amenities': ['Máy giặt', 'Chỗ đậu xe', 'Cho phép thú cưng', 'Bồn tắm', 'Lò sưởi trong nhà', 'Ăn sáng', 'Bàn làm việc', 'Báo khói', 'Khu BBQ', 'Wifi', 'Lò sưởi', 'Hồ bơi', 'Bếp', 'Ban công'],
         'description': 'Chuỗi biệt thự ven biển tuyệt đẹp mang kiến trúc tân cổ điển sang trọng.',
         'categories': ['Villa', 'Gia đình'],
-        'latitude': 15.9922,
+        'latitude': 15.9922, // Tọa độ Ngũ Hành Sơn
         'longitude': 108.2750,
         'city': 'Đà Nẵng',
         'district': 'Ngũ Hành Sơn',
@@ -548,7 +541,7 @@ class MockData {
         'amenities': ['Máy sấy tóc', 'Cho phép thú cưng', 'Bếp', 'View biển', 'Báo khí CO', 'Khu BBQ', 'Máy giặt', 'Máy lạnh', 'Lò sưởi', 'Wifi', 'Báo khói', 'Lò sưởi trong nhà', 'Ban công', 'Bàn ủi', 'Bàn làm việc', 'Hồ bơi'],
         'description': 'Trải nghiệm văn hóa và dịch vụ chuẩn Nhật Bản ngay tại miền Trung Việt Nam.',
         'categories': ['Resort', 'Thư giãn'],
-        'latitude': 15.9392,
+        'latitude': 15.9392, // Tọa độ Điện Bàn
         'longitude': 108.3150,
         'city': 'Quảng Nam',
         'district': 'Điện Bàn',
@@ -582,7 +575,7 @@ class MockData {
         'amenities': ['Khu BBQ', 'Wifi', 'Báo khí CO', 'View biển', 'Cho phép thú cưng', 'Bếp', 'Máy sấy tóc', 'Máy giặt', 'Hồ bơi', 'Bàn ủi', 'Ban công', 'Gym', 'Bàn làm việc', 'Lò sưởi trong nhà', 'Báo khói', 'Chỗ đậu xe', 'Máy lạnh', 'Ăn sáng'],
         'description': 'Khu nghỉ dưỡng mang âm hưởng kiến trúc cổ điển xen lẫn nhiệt đới, trải dài trên bãi biển Hà My.',
         'categories': ['Gần biển', 'Tiết kiệm'],
-        'latitude': 15.9221,
+        'latitude': 15.9221, // Tọa độ Điện Bàn
         'longitude': 108.3225,
         'city': 'Quảng Nam',
         'district': 'Điện Bàn',
@@ -616,7 +609,7 @@ class MockData {
         'amenities': ['Ăn sáng', 'Báo khí CO', 'Máy giặt', 'Bàn làm việc', 'View biển', 'Máy lạnh', 'Lò sưởi trong nhà', 'Hồ bơi', 'Máy sấy tóc', 'Gym', 'Ban công', 'Chỗ đậu xe', 'Bàn ủi', 'Cho phép thú cưng', 'Báo khói', 'Lò sưởi', 'Wifi'],
         'description': 'Đỉnh cao của sự xa hoa và riêng tư, The Nam Hai là một kiệt tác kiến trúc ven biển.',
         'categories': ['Siêu sang', 'Villa'],
-        'latitude': 15.9100,
+        'latitude': 15.9100, // Tọa độ Điện Bàn
         'longitude': 108.3275,
         'city': 'Quảng Nam',
         'district': 'Điện Bàn',
@@ -650,7 +643,7 @@ class MockData {
         'amenities': ['Máy lạnh', 'Bàn ủi', 'Ăn sáng', 'Wifi', 'Khu BBQ', 'Báo khí CO', 'Hồ bơi', 'Bồn tắm', 'Bàn làm việc', 'Cho phép thú cưng', 'Bếp', 'View biển', 'Lò sưởi', 'Gym', 'Báo khói', 'Máy sấy tóc', 'Ban công', 'Lò sưởi trong nhà'],
         'description': 'Khu nghỉ dưỡng lấy cảm hứng từ làng nghề lụa truyền thống của Hội An, không gian yên bình tĩnh lặng.',
         'categories': ['Văn hóa', 'Gia đình'],
-        'latitude': 15.8824,
+        'latitude': 15.8824, // Tọa độ Hội An
         'longitude': 108.3168,
         'city': 'Quảng Nam',
         'district': 'Hội An',
@@ -669,6 +662,47 @@ class MockData {
     ];
   }
 
-  static List<Map<String, dynamic>> getMockBookings() => [];
+  static List<Map<String, dynamic>> getMockBookings() {
+    return [
+      {
+        'id': 'b1',
+        'orderCode': 10001,
+        'userId': 'u1',
+        'propertyId': 'p1',
+        'property': getMockProperties()[0],
+        'checkIn': '2026-10-12T14:00:00Z',
+        'checkOut': '2026-10-15T12:00:00Z',
+        'guests': 2,
+        'basePrice': 1850000.0,
+        'serviceFee': 150000.0,
+        'tax': 185000.0,
+        'discountAmount': 0.0,
+        'totalPrice': 5885000.0,
+        'status': 'confirmed',
+        'updatedAt': '2026-10-10T10:00:00Z',
+        'paymentMethod': 'MoMo',
+        'transactionId': 'TRX-999-001',
+      },
+      {
+        'id': 'b2',
+        'orderCode': 10002,
+        'userId': 'u1',
+        'propertyId': 'p2',
+        'property': getMockProperties()[1],
+        'checkIn': '2026-08-05T14:00:00Z',
+        'checkOut': '2026-08-08T12:00:00Z',
+        'guests': 4,
+        'basePrice': 2500000.0,
+        'serviceFee': 200000.0,
+        'tax': 250000.0,
+        'discountAmount': 500000.0,
+        'totalPrice': 7450000.0,
+        'status': 'completed',
+        'updatedAt': '2026-08-09T09:00:00Z',
+        'paymentMethod': 'Bank Transfer',
+        'transactionId': 'TRX-888-002',
+      }
+    ];
+  }
   static List<Map<String, dynamic>> getMockMessages() => [];
 }

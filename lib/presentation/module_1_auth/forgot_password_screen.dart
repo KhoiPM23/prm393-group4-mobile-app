@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../data/repositories/firebase_user_repository.dart';
-import '../../data/repositories/mock_user_repository.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -22,8 +21,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _userRepository = FirebaseUserRepository();
   bool _isLoading = false;
   bool _isSent = false;
-  String? _demoOtp;
-  bool _isFirebaseFlow = false;
 
   @override
   void dispose() {
@@ -35,15 +32,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
-      final otp = await _userRepository.requestPasswordResetOtp(
+      await _userRepository.requestPasswordResetOtp(
         _emailController.text,
       );
       if (!mounted) return;
       setState(() {
         _isSent = true;
-        _demoOtp = otp.isEmpty ? null : otp;
-        _isFirebaseFlow = otp.isEmpty;
       });
+      _showSuccess('Vui lòng check mail để đặt lại mật khẩu.');
     } on AuthException catch (error) {
       if (!mounted) return;
       _showError(error.message);
@@ -62,6 +58,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           style: AppTextStyles.bodyMd.copyWith(color: Colors.white),
         ),
         backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+        ),
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppTextStyles.bodyMd.copyWith(color: Colors.white),
+        ),
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -178,7 +190,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
-                            'Nhập email của bạn để nhận mã xác thực OTP',
+                            'Nhập email của bạn để nhận link đặt lại mật khẩu',
                             style: AppTextStyles.bodyLg.copyWith(
                               color: AppColors.onSurfaceVariant,
                             ),
@@ -201,7 +213,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                       if (v == null || v.isEmpty) {
                                         return 'Vui lòng nhập email';
                                       }
-                                      if (!MockUserRepository.isValidEmail(v)) {
+                                      if (!FirebaseUserRepository.isValidEmail(v)) {
                                         return 'Email không hợp lệ';
                                       }
                                       return null;
@@ -209,14 +221,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   ),
                                   const SizedBox(height: AppSpacing.sm),
                                   Text(
-                                    'Chúng tôi sẽ gửi mã OTP tới hòm thư của bạn.',
+                                    'Chúng tôi sẽ gửi email đặt lại mật khẩu tới hòm thư của bạn.',
                                     style: AppTextStyles.labelMd.copyWith(
                                       color: AppColors.outline,
                                     ),
                                   ),
                                   const SizedBox(height: AppSpacing.lg),
                                   VibePrimaryButton(
-                                    label: 'Gửi mã OTP',
+                                    label: 'Gửi email',
                                     onPressed: _handleSendOtp,
                                     isLoading: _isLoading,
                                     trailingIcon: Icons.arrow_forward,
@@ -252,36 +264,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
-                                    _isFirebaseFlow
-                                        ? 'Vui lòng kiểm tra hộp thư ${_emailController.text} và mở link Firebase để đổi mật khẩu.'
-                                        : 'Vui lòng kiểm tra hộp thư ${_emailController.text} và lấy mã OTP để đổi mật khẩu.',
+                                    'Vui lòng kiểm tra hộp thư ${_emailController.text} để đặt lại mật khẩu.',
                                     style: AppTextStyles.bodyMd.copyWith(
                                       color: AppColors.onSurfaceVariant,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
-                                  if (_demoOtp != null) ...[
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      'OTP mock để test: $_demoOtp',
-                                      style: AppTextStyles.labelMd.copyWith(
-                                        color: AppColors.outline,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
                                   const SizedBox(height: AppSpacing.md),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pushNamed(
-                                            '/reset-password',
-                                            arguments:
-                                                _emailController.text.trim()),
-                                    child: Text(
-                                      'Đặt lại mật khẩu ngay',
-                                      style: AppTextStyles.labelLg.copyWith(
-                                        color: AppColors.primary,
-                                      ),
+                                  VibePrimaryButton(
+                                    label: 'Quay về đăng nhập',
+                                    onPressed: () => Navigator.of(context)
+                                        .pushNamedAndRemoveUntil(
+                                      '/login',
+                                      (_) => false,
                                     ),
                                   ),
                                 ],
