@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         break; // Already home
       case 1:
-        Navigator.of(context).pushNamed('/explore');
+        Navigator.of(context).pushNamed('/explore-intro');
         break;
       case 2:
         Navigator.of(context).pushNamed('/profile');
