@@ -4,12 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/theme/app_theme.dart';
-<<<<<<< HEAD
 import 'data/repositories/mock_booking_repository.dart';
-=======
 import 'data/datasources/local/app_database.dart';
 import 'data/repositories/firebase_user_repository.dart';
->>>>>>> origin/feature/booking/hoang
 import 'data/repositories/mock_property_repository.dart';
 import 'data/repositories/search_history_repository_impl.dart';
 import 'data/repositories/wishlist_repository_impl.dart';
@@ -39,11 +36,9 @@ import 'presentation/module_5_interaction/inbox_screen.dart';
 import 'presentation/module_5_interaction/notification_center_screen.dart';
 import 'presentation/module_5_interaction/profile_screen.dart';
 
-<<<<<<< HEAD
 import 'error_dumper.dart';
-=======
+
 late final AppDatabase _appDatabase;
->>>>>>> origin/feature/booking/hoang
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -107,36 +102,25 @@ class VibeLocalsApp extends StatelessWidget {
             '/forgot-password': (context) => const ForgotPasswordScreen(),
             '/reset-password': (context) => const ResetPasswordScreen(),
 
-<<<<<<< HEAD
-        // ===== MAIN APP FLOW =====
-        '/home': (context) => const HomeScreen(),
-        '/explore-intro': (context) => const ExploreMapIntroScreen(),
-        '/explore': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-          return BlocProvider(
-            create: (context) => MapBloc(
-              propertyRepository: MockPropertyRepository(),
-              bookingRepository: MockBookingRepository(),
-            ),
-            child: ExploreMapScreen(
-              city: (args != null && args['city'] != null) ? args['city'] as String : null,
-              dates: (args != null && args['dates'] != null) ? args['dates'] as DateTimeRange : null,
-              lat: (args != null && args['lat'] != null) ? args['lat'] as double : null,
-              lon: (args != null && args['lon'] != null) ? args['lon'] as double : null,
-            ),
-          );
-        },
-=======
             // ===== MAIN APP FLOW =====
             '/home': (context) => const HomeScreen(),
             '/wishlist': (context) => const WishlistScreen(),
-            '/explore': (context) => BlocProvider(
-                  create: (context) => MapBloc(
-                    propertyRepository: MockPropertyRepository(),
-                  ),
-                  child: const ExploreMapScreen(),
+            '/explore-intro': (context) => const ExploreMapIntroScreen(),
+            '/explore': (context) {
+              final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              return BlocProvider(
+                create: (context) => MapBloc(
+                  propertyRepository: MockPropertyRepository(),
+                  bookingRepository: MockBookingRepository(),
                 ),
->>>>>>> origin/feature/booking/hoang
+                child: ExploreMapScreen(
+                  city: (args != null && args['city'] != null) ? args['city'] as String : null,
+                  dates: (args != null && args['dates'] != null) ? args['dates'] as DateTimeRange : null,
+                  lat: (args != null && args['lat'] != null) ? args['lat'] as double : null,
+                  lon: (args != null && args['lon'] != null) ? args['lon'] as double : null,
+                ),
+              );
+            },
 
             // ===== BOOKING FLOW =====
             '/property-detail': (context) => const PropertyDetailScreen(),
