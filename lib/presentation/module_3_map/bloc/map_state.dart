@@ -20,6 +20,8 @@ class MapState {
   final double? maxPrice;
   final double? minRating;
   final List<String> selectedAmenities;
+  final DateTime? checkIn;
+  final DateTime? checkOut;
   final String? errorMessage;
 
   final LatLng? userLocation;
@@ -36,6 +38,8 @@ class MapState {
     this.maxPrice,
     this.minRating,
     required this.selectedAmenities,
+    this.checkIn,
+    this.checkOut,
     this.errorMessage,
     this.userLocation,
   });
@@ -68,6 +72,8 @@ class MapState {
     double? Function()? maxPrice,
     double? Function()? minRating,
     List<String>? selectedAmenities,
+    DateTime? Function()? checkIn,
+    DateTime? Function()? checkOut,
     String? Function()? errorMessage,
     LatLng? Function()? userLocation,
   }) {
@@ -84,6 +90,8 @@ class MapState {
       maxPrice: maxPrice != null ? maxPrice() : this.maxPrice,
       minRating: minRating != null ? minRating() : this.minRating,
       selectedAmenities: selectedAmenities ?? this.selectedAmenities,
+      checkIn: checkIn != null ? checkIn() : this.checkIn,
+      checkOut: checkOut != null ? checkOut() : this.checkOut,
       errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,
       userLocation: userLocation != null ? userLocation() : this.userLocation,
     );

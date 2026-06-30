@@ -19,12 +19,14 @@ class MapViewportChanged extends MapEvent {
   final double maxLat;
   final double minLng;
   final double maxLng;
+  final bool isGesture;
 
   MapViewportChanged({
     required this.minLat,
     required this.maxLat,
     required this.minLng,
     required this.maxLng,
+    this.isGesture = false,
   });
 }
 
@@ -60,4 +62,12 @@ class MapMarkerSelected extends MapEvent {
 class MapUserLocationUpdated extends MapEvent {
   final LatLng location;
   MapUserLocationUpdated(this.location);
+}
+
+// 8. Chọn khoảng thời gian lưu trú
+class MapDateRangeSelected extends MapEvent {
+  final DateTime checkIn;
+  final DateTime checkOut;
+  
+  MapDateRangeSelected({required this.checkIn, required this.checkOut});
 }

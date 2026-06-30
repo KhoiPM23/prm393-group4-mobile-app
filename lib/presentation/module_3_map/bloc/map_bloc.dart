@@ -2,15 +2,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../domain/entities/property_entity.dart';
 import '../../../domain/repositories/property_repository.dart';
+import '../../../domain/entities/booking_entity.dart';
+import '../../../domain/repositories/booking_repository.dart';
 import 'map_event.dart';
 import 'map_state.dart';
 
 class MapBloc extends Bloc<MapEvent, MapState> {
   final PropertyRepository _propertyRepository;
+  final BookingRepository _bookingRepository;
+  
   List<PropertyEntity> _masterList = [];
+  List<BookingEntity> _allBookings = [];
 
-  MapBloc({required PropertyRepository propertyRepository})
-      : _propertyRepository = propertyRepository,
+  MapBloc({
+    required PropertyRepository propertyRepository,
+    required BookingRepository bookingRepository,
+  })  : _propertyRepository = propertyRepository,
+        _bookingRepository = bookingRepository,
         super(MapState.initial()) {
     on<MapInitialized>(_onInitialized);
     on<MapSearchInputChanged>(_onSearchInputChanged);
@@ -19,6 +27,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     on<MapFilterApplied>(_onFilterApplied);
     on<MapMarkerSelected>(_onMarkerSelected);
     on<MapUserLocationUpdated>(_onUserLocationUpdated);
+    on<MapDateRangeSelected>(_onDateRangeSelected);
   }
 
   String _toUnsignedLower(String text) {
@@ -33,12 +42,31 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     return str;
   }
 
+  int _calculateScore(PropertyEntity property, String query) {
+    final title = _toUnsignedLower(property.title);
+    final district = _toUnsignedLower(property.district);
+    final city = _toUnsignedLower(property.city);
+
+    if (city.startsWith(query)) return 5;
+    if (district.startsWith(query)) return 4;
+    if (title.startsWith(query)) return 3;
+    if (city.contains(query)) return 2;
+    if (district.contains(query)) return 1;
+    return 0;
+  }
+
   Future<void> _onInitialized(
       MapInitialized event, Emitter<MapState> emit) async {
     emit(state.copyWith(status: MapStatus.loading));
     try {
-      final result = await _propertyRepository.getProperties();
-      _masterList = result;
+      final propertiesFuture = _propertyRepository.getProperties();
+      final bookingsFuture = _bookingRepository.getAllBookings();
+      
+      final results = await Future.wait([propertiesFuture, bookingsFuture]);
+      
+      _masterList = results[0] as List<PropertyEntity>;
+      _allBookings = results[1] as List<BookingEntity>;
+      
       final filtered = _applyFilteringPipeline(state);
       emit(state.copyWith(
           status: MapStatus.loaded,
@@ -87,7 +115,10 @@ class MapBloc extends Bloc<MapEvent, MapState> {
           p.longitude >= event.minLng &&
           p.longitude <= event.maxLng;
     }).toList();
-    emit(state.copyWith(visibleProperties: visible));
+    emit(state.copyWith(
+      visibleProperties: visible,
+      searchQuery: event.isGesture ? 'Khu vực bản đồ' : state.searchQuery,
+    ));
   }
 
   void _onMarkerSelected(MapMarkerSelected event, Emitter<MapState> emit) {
@@ -106,23 +137,46 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     emit(state.copyWith(userLocation: () => event.location));
   }
 
+  void _onDateRangeSelected(
+      MapDateRangeSelected event, Emitter<MapState> emit) {
+    final updatedState = state.copyWith(
+        checkIn: () => event.checkIn, 
+        checkOut: () => event.checkOut,
+        selectedProperty: () => null); // Reset selected property
+    final filtered = _applyFilteringPipeline(updatedState);
+    emit(updatedState.copyWith(
+        allProperties: filtered, visibleProperties: filtered));
+  }
+
+  bool _isPropertyAvailable(PropertyEntity property, DateTime checkIn, DateTime checkOut) {
+    // Lọc ra các booking của property này
+    final propertyBookings = _allBookings.where((b) => b.propertyId == property.id).toList();
+    
+    for (final booking in propertyBookings) {
+      // Chỉ quan tâm các booking đã xác nhận hoặc đã thanh toán
+      if (booking.status != BookingStatus.confirmed && booking.status != BookingStatus.paid) {
+        continue;
+      }
+      
+      // Kiểm tra overlap thời gian
+      // Overlap xảy ra khi: checkIn của khách < checkOut của booking VÀ checkOut của khách > checkIn của booking
+      final isOverlapping = checkIn.isBefore(booking.checkOut) && checkOut.isAfter(booking.checkIn);
+      
+      if (isOverlapping) {
+        return false; // Hết phòng
+      }
+    }
+    return true; // Có phòng trống
+  }
+
   List<PropertyEntity> _applyFilteringPipeline(MapState targetState) {
-    return _masterList.where((property) {
+    List<PropertyEntity> results = _masterList.where((property) {
       if (targetState.selectedCity != 'Tất cả' &&
           property.city.toLowerCase() != targetState.selectedCity.toLowerCase())
         return false;
       if (targetState.selectedDistrict != 'Tất cả' &&
           property.district.toLowerCase() !=
               targetState.selectedDistrict.toLowerCase()) return false;
-
-      if (targetState.searchQuery.isNotEmpty) {
-        final query = _toUnsignedLower(targetState.searchQuery).trim();
-        final matchTitle = _toUnsignedLower(property.title).contains(query);
-        final matchDistrict =
-            _toUnsignedLower(property.district).contains(query);
-        final matchCity = _toUnsignedLower(property.city).contains(query);
-        if (!matchTitle && !matchDistrict && !matchCity) return false;
-      }
 
       if (targetState.minPrice != null &&
           property.pricePerNight < targetState.minPrice!) return false;
@@ -135,7 +189,43 @@ class MapBloc extends Bloc<MapEvent, MapState> {
             .every((a) => property.amenities.contains(a));
         if (!hasAll) return false;
       }
+      
+      // Lọc theo ngày (Giả lập)
+      if (targetState.checkIn != null && targetState.checkOut != null) {
+        if (!_isPropertyAvailable(property, targetState.checkIn!, targetState.checkOut!)) {
+          return false;
+        }
+      }
+      
       return true;
     }).toList();
+
+    // 2. Lọc và chấm điểm (Scoring) theo searchQuery
+    final rawQuery = targetState.searchQuery;
+    if (rawQuery.isNotEmpty && 
+        rawQuery != 'Khu vực bản đồ' && 
+        rawQuery != 'Mọi nơi') {
+      final query = _toUnsignedLower(rawQuery).trim();
+      
+      // Lọc bỏ những property không khớp
+      results = results.where((property) {
+        final matchTitle = _toUnsignedLower(property.title).contains(query);
+        final matchDistrict = _toUnsignedLower(property.district).contains(query);
+        final matchCity = _toUnsignedLower(property.city).contains(query);
+        return matchTitle || matchDistrict || matchCity;
+      }).toList();
+
+      // Sắp xếp theo mức độ phù hợp
+      results.sort((a, b) {
+        int scoreA = _calculateScore(a, query);
+        int scoreB = _calculateScore(b, query);
+        if (scoreA != scoreB) {
+          return scoreB.compareTo(scoreA); // Điểm cao hơn xếp trên
+        }
+        return a.title.compareTo(b.title); // Bằng điểm thì sort alphabet theo tên
+      });
+    }
+
+    return results;
   }
 }
