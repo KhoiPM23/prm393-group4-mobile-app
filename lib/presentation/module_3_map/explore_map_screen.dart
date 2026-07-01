@@ -53,6 +53,7 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
       ValueNotifier<double>(0.10);
   DateTimeRange? _selectedDateRange;
   Timer? _boundsDebounceTimer;
+  bool _isInitialSearch = true;
 
   @override
   void initState() {
@@ -297,8 +298,14 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
           BlocListener<MapBloc, MapState>(
             listenWhen: (previous, current) =>
                 previous.searchQuery != current.searchQuery &&
-                current.searchQuery.isNotEmpty,
+                current.searchQuery.isNotEmpty &&
+                current.searchQuery != 'Khu vực bản đồ',
             listener: (context, state) {
+              if (_isInitialSearch && widget.lat != null && widget.lon != null) {
+                _isInitialSearch = false;
+                return; // Bỏ qua animation đầu tiên nếu đi từ Intro Screen
+              }
+              _isInitialSearch = false;
               if (state.allProperties.isNotEmpty) {
                 double sumLat = 0;
                 double sumLng = 0;

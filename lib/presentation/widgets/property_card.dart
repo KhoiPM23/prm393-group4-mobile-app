@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -87,10 +88,14 @@ class _PropertyCardState extends State<PropertyCard>
                 fit: StackFit.expand,
                 children: [
                   // Property Image
-                  Image.network(
-                    widget.imageUrl,
+                  CachedNetworkImage(
+                    imageUrl: widget.imageUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                    memCacheWidth: 600,
+                    placeholder: (context, url) => Container(
+                      color: AppColors.surfaceContainerHigh,
+                    ),
+                    errorWidget: (context, url, error) => Container(
                       color: AppColors.surfaceContainerHigh,
                       child: const Icon(
                         Icons.villa_outlined,

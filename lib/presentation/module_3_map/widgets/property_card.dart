@@ -56,6 +56,7 @@ class PropertyPreviewCardState extends State<PropertyPreviewCard> {
                     height: 145,
                     child: widget.property.imageUrls.isNotEmpty
                         ? PageView.builder(
+                            allowImplicitScrolling: true,
                             controller: _pageController,
                             onPageChanged: (idx) =>
                                 setState(() => _currentPage = idx),
@@ -64,6 +65,7 @@ class PropertyPreviewCardState extends State<PropertyPreviewCard> {
                               return CachedNetworkImage(
                                 imageUrl: widget.property.imageUrls[index],
                                 fit: BoxFit.cover,
+                                memCacheWidth: 600, // Optimize RAM usage
                                 placeholder: (context, url) => Container(
                                     color: Colors.grey.shade200,
                                 ),
