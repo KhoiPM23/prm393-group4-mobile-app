@@ -115,9 +115,14 @@ class MapBloc extends Bloc<MapEvent, MapState> {
           p.longitude >= event.minLng &&
           p.longitude <= event.maxLng;
     }).toList();
+    String newQuery = state.searchQuery;
+    if (event.isGesture && visible.isEmpty) {
+      newQuery = 'Khu vực bản đồ';
+    }
+
     emit(state.copyWith(
       visibleProperties: visible,
-      searchQuery: event.isGesture ? 'Khu vực bản đồ' : state.searchQuery,
+      searchQuery: newQuery,
     ));
   }
 
@@ -171,7 +176,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
   List<PropertyEntity> _applyFilteringPipeline(MapState targetState) {
     List<PropertyEntity> results = _masterList.where((property) {
-      if (targetState.selectedCity != 'Tất cả' &&
+      if (targetState.selectedCity != 'Tất cả' && targetState.selectedCity.isNotEmpty &&
           property.city.toLowerCase() != targetState.selectedCity.toLowerCase())
         return false;
       if (targetState.selectedDistrict != 'Tất cả' &&

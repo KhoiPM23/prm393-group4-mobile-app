@@ -43,7 +43,7 @@ class ExploreMapScreen extends StatefulWidget {
 class _ExploreMapScreenState extends State<ExploreMapScreen>
     with TickerProviderStateMixin {
   bool _showSearchBox = false;
-  int _currentNavIndex = 1;
+  int _currentNavIndex = 2;
   final MapController _mapController = MapController();
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
@@ -61,7 +61,11 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
     final bloc = context.read<MapBloc>();
     bloc.add(MapInitialized());
     if (widget.city != null && widget.city!.isNotEmpty) {
-      bloc.add(MapLocationChanged(city: widget.city!, district: 'Tất cả'));
+      if (widget.city == 'Gần tôi') {
+        bloc.add(MapLocationChanged(city: '', district: 'Tất cả'));
+      } else {
+        bloc.add(MapLocationChanged(city: widget.city!, district: 'Tất cả'));
+      }
     }
     if (widget.dates != null) {
       bloc.add(MapDateRangeSelected(
@@ -100,6 +104,9 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
     if (mounted) {
       context.read<MapBloc>().add(MapUserLocationUpdated(
           LatLng(position.latitude, position.longitude)));
+      if (widget.city == 'Gần tôi') {
+        _animatedMapMove(LatLng(position.latitude, position.longitude), 14.0);
+      }
     }
   }
 
@@ -333,7 +340,7 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                       : const LatLng(16.055, 108.235),
                   initialZoom:
                       widget.lat != null && widget.lon != null ? 13.0 : 13.5,
-                  minZoom: 9.0, // Cho phép zoom xa hơn để thấy tới Hội An
+                  minZoom: 3.0, // Cho phép zoom xa hơn để thấy tới Hội An
                   maxZoom: 18.0,
                   onMapReady: () => _updateViewportBounds(false),
                   onPositionChanged: (position, hasGesture) {
@@ -532,7 +539,7 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                                   boxShadow: [
                                                     BoxShadow(
                                                       color: Colors.black
-                                                          .withOpacity(0.05),
+                                                          .withValues(alpha: 0.05),
                                                       blurRadius: 4,
                                                       offset:
                                                           const Offset(0, 2),
@@ -853,23 +860,30 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                 ? const [0.10, 0.35]
                                 : [0.10, 0.35, maxListSize],
                             builder: (context, scrollController) {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? Colors.transparent
-                                      : AppColors.surface,
-                                  borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(32)),
-                                  boxShadow: isSelected
-                                      ? null
-                                      : [
-                                          BoxShadow(
-                                              color: Colors.black
-                                                  .withValues(alpha: 0.2),
-                                              blurRadius: 24,
-                                              offset: const Offset(0, -6))
-                                        ],
-                                ),
+                              return ValueListenableBuilder<double>(
+                                valueListenable: _sheetExtentNotifier,
+                                builder: (context, extent, child) {
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? Colors.transparent
+                                          : AppColors.surface,
+                                      borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(
+                                              extent >= maxListSize - 0.02 ? 0 : 32)),
+                                      boxShadow: isSelected
+                                          ? null
+                                          : [
+                                              BoxShadow(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.2),
+                                                  blurRadius: 24,
+                                                  offset: const Offset(0, -6))
+                                            ],
+                                    ),
+                                    child: child,
+                                  );
+                                },
                                 // Sử dụng ListView duy nhất bao trọn tất cả, từ Header đến các Item.
                                 // Điều này giúp toàn bộ vùng cửa sổ (kể cả Header) đều nhận diện thao tác kéo (Drag) mượt mà!
                                 child: ListView.builder(
@@ -1177,8 +1191,12 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
         ? state.searchQuery
         : (widget.city ?? 'Mọi nơi');
     String dateText = widget.dates != null
-        ? '${widget.dates!.start.day}-${widget.dates!.end.day} Thg ${widget.dates!.start.month}'
+        ? (widget.dates!.start.month == widget.dates!.end.month)
+            ? '${widget.dates!.start.day}-${widget.dates!.end.day} Thg ${widget.dates!.start.month}'
+            : '${widget.dates!.start.day} Thg ${widget.dates!.start.month} - ${widget.dates!.end.day} Thg ${widget.dates!.end.month}'
         : 'Bất kỳ lúc nào';
+        
+    int activeFilters = state.activeFiltersCount;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -1195,7 +1213,7 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 8,
                       offset: const Offset(0, 2))
                 ],
@@ -1217,7 +1235,7 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 8,
                         offset: const Offset(0, 2))
                   ],
@@ -1271,20 +1289,55 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
           // Filter Button
           GestureDetector(
             onTap: () => _showFilterOptions(context),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2))
-                ],
-              ),
-              child: const Icon(Icons.tune, size: 18, color: Colors.black87),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.black87, width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2))
+                    ],
+                  ),
+                  child: const Icon(Icons.tune, size: 18, color: Colors.black87),
+                ),
+                if (activeFilters > 0)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Center(
+                        child: Text(
+                          activeFilters.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            height: 1, // center text vertically
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
