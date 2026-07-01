@@ -223,24 +223,14 @@ class FloatingSearchBarState extends State<FloatingSearchBar> {
       link: _layerLink,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        height: 56,
+        height: 48,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            // Viền xanh nhạt khi focus — subtle nhưng rõ ràng
-            color: isFocused
-                ? AppColors.primary.withValues(alpha: 0.40)
-                : Colors.transparent,
-            width: 1.5,
-          ),
           boxShadow: [
             BoxShadow(
-              color: isFocused
-                  ? AppColors.primary.withValues(alpha: 0.12)
-                  : Colors.black.withValues(alpha: 0.10),
-              blurRadius: isFocused ? 20 : 10,
-              spreadRadius: isFocused ? 2 : 0,
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: isFocused ? 12 : 8,
               offset: const Offset(0, 2),
             ),
           ],
@@ -287,15 +277,7 @@ class FloatingSearchBarState extends State<FloatingSearchBar> {
                   },
                   icon:
                       const Icon(Icons.clear, color: Colors.black54, size: 20)),
-            Container(
-                width: 1,
-                height: 24,
-                color: Colors.grey.shade300,
-                margin: const EdgeInsets.symmetric(horizontal: 4)),
-            IconButton(
-              onPressed: () => _showFilterBottomSheet(context),
-              icon: const Icon(Icons.tune, color: Colors.black),
-            ),
+            const SizedBox(width: 8),
           ],
         ),
       ),

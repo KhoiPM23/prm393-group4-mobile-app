@@ -96,4 +96,12 @@ class MapState {
       userLocation: userLocation != null ? userLocation() : this.userLocation,
     );
   }
+
+  int get activeFiltersCount {
+    int count = 0;
+    if ((minPrice != null && minPrice! > 0) || (maxPrice != null && maxPrice! < 10000000)) count++;
+    if (minRating != null) count++;
+    count += selectedAmenities.length;
+    return count;
+  }
 }

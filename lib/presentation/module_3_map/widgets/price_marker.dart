@@ -4,7 +4,15 @@ class PriceMarker extends StatefulWidget {
   final String price;
   final bool isActive;
   final bool isFavorite;
-  const PriceMarker({super.key, required this.price, required this.isActive, this.isFavorite = false});
+  final VoidCallback? onTap;
+
+  const PriceMarker({
+    super.key, 
+    required this.price, 
+    required this.isActive, 
+    this.isFavorite = false,
+    this.onTap,
+  });
 
   @override
   State<PriceMarker> createState() => _PriceMarkerState();
@@ -15,6 +23,7 @@ class _PriceMarkerState extends State<PriceMarker>
   late final AnimationController _spawnCtrl;
   late final Animation<double> _spawnAnim;
   late final AnimationController _rippleCtrl;
+  bool _isPressed = false;
 
   @override
   void initState() {
@@ -51,18 +60,43 @@ class _PriceMarkerState extends State<PriceMarker>
     super.dispose();
   }
 
+  void _handleTapDown(TapDownDetails details) {
+    if (widget.onTap != null) setState(() => _isPressed = true);
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    if (widget.onTap != null) {
+      setState(() => _isPressed = false);
+      widget.onTap!();
+    }
+  }
+
+  void _handleTapCancel() {
+    if (widget.onTap != null) setState(() => _isPressed = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: AnimatedBuilder(
         animation: _spawnAnim,
         builder: (context, child) {
-          return Transform.scale(
-            scale: _spawnAnim.value * (widget.isActive ? 1.15 : 1.0),
-            child: child,
+          return AnimatedScale(
+            scale: _isPressed ? 0.9 : 1.0,
+            duration: const Duration(milliseconds: 150),
+            curve: Curves.easeOutCubic,
+            child: Transform.scale(
+              scale: _spawnAnim.value * (widget.isActive ? 1.15 : 1.0),
+              child: child,
+            ),
           );
         },
-        child: Stack(
+        child: GestureDetector(
+          onTapDown: _handleTapDown,
+          onTapUp: _handleTapUp,
+          onTapCancel: _handleTapCancel,
+          behavior: HitTestBehavior.opaque,
+          child: Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.center,
           children: [
@@ -112,6 +146,7 @@ class _PriceMarkerState extends State<PriceMarker>
               ),
             ),
           ],
+        ),
         ),
       ),
     );

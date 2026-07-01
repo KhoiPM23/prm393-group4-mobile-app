@@ -25,6 +25,7 @@ import 'widgets/price_marker.dart';
 import 'widgets/property_card.dart';
 import 'widgets/user_location_beacon.dart';
 import '../module_2_explore/cubit/wishlist_cubit.dart';
+import '../../../domain/entities/property_entity.dart';
 
 class ExploreMapScreen extends StatefulWidget {
   final String? city;
@@ -370,35 +371,42 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                         previous.selectedProperty != current.selectedProperty,
                     builder: (context, state) {
                       return MarkerLayer(
-                        markers: state.visibleProperties.map((property) {
-                          final isActive =
-                              state.selectedProperty?.id == property.id;
-                          return Marker(
-                            point:
-                                LatLng(property.latitude, property.longitude),
-                            width: 120,
-                            height: 42,
-                            alignment: Alignment.center,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-                                context
-                                    .read<MapBloc>()
-                                    .add(MapMarkerSelected(property.id));
-                              },
+                        markers: () {
+                          final sortedProperties = List<PropertyEntity>.from(state.visibleProperties);
+                          if (state.selectedProperty != null) {
+                            final selectedIndex = sortedProperties.indexWhere((p) => p.id == state.selectedProperty!.id);
+                            if (selectedIndex != -1) {
+                              final selected = sortedProperties.removeAt(selectedIndex);
+                              sortedProperties.add(selected);
+                            }
+                          }
+                          return sortedProperties.map((property) {
+                            final isActive =
+                                state.selectedProperty?.id == property.id;
+                            return Marker(
+                              point:
+                                  LatLng(property.latitude, property.longitude),
+                              width: 120,
+                              height: 42,
+                              alignment: Alignment.center,
                               child: BlocBuilder<WishlistCubit, Set<String>>(
                                 builder: (context, favoriteIds) {
                                   return PriceMarker(
                                     price: '${(property.pricePerNight / 1000000).toStringAsFixed(1)}M',
                                     isActive: isActive,
                                     isFavorite: favoriteIds.contains(property.id),
+                                    onTap: () {
+                                      HapticFeedback.lightImpact();
+                                      context
+                                          .read<MapBloc>()
+                                          .add(MapMarkerSelected(property.id));
+                                    },
                                   );
                                 },
                               ),
-                            ),
-                          );
-                        }).toList(),
+                            );
+                          }).toList();
+                        }(),
                       );
                     },
                   ),
@@ -844,15 +852,15 @@ class _ExploreMapScreenState extends State<ExploreMapScreen>
                                       ? Colors.transparent
                                       : AppColors.surface,
                                   borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(24)),
+                                      top: Radius.circular(32)),
                                   boxShadow: isSelected
                                       ? null
                                       : [
                                           BoxShadow(
                                               color: Colors.black
-                                                  .withValues(alpha: 0.15),
-                                              blurRadius: 20,
-                                              offset: const Offset(0, -4))
+                                                  .withValues(alpha: 0.2),
+                                              blurRadius: 24,
+                                              offset: const Offset(0, -6))
                                         ],
                                 ),
                                 // Sử dụng ListView duy nhất bao trọn tất cả, từ Header đến các Item.
